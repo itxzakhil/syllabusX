@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Mark Attendance — SyllabusX{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- College Institutional Banner -->
+    <div class="college-badge-banner">
+        <div class="college-crest-icon">🏛️</div>
+        <div class="college-info">
+            <h2>Meerut Institute of Technology</h2>
+            <p>Faculty Attendance Register • Department of Computer Science &amp; Engineering</p>
+            <span class="college-tagline">Daily Lecture Attendance Muster Roll • Department of Computer Science &amp; Engineering</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="portal-badge faculty-badge-style">ATTENDANCE SYSTEM</span>
+                <span class="status-badge status-active">Daily Lecture Marking</span>
+            </div>
+            <h1>Take Student Attendance</h1>
+            <p>Select date, topic, and record attendance for all enrolled students</p>
+        </div>
+
+        <div class="header-action-buttons">
+            <a href="{{ url_for('admin_attendance_records') }}" class="btn btn-secondary">
+                📋 View Attendance Records
+            </a>
+            {% if session.get('faculty_id') %}
+            <a href="{{ url_for('faculty_dashboard') }}" class="btn btn-secondary">
+                ← Faculty Dashboard
+            </a>
+            {% else %}
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                ← Admin Dashboard
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+
+    {% if is_already_marked %}
+    <div class="notice-card" style="background: #eff6ff; border-left: 5px solid #3b82f6; margin-bottom: 25px;">
+        <h3 style="color: #1e40af;">ℹ Attendance Already Recorded for Selected Date</h3>
+        <p>Attendance records already exist for this date and course. Modifying the fields below and saving will <strong>update</strong> the existing records.</p>
+    </div>
+    {% endif %}
+
+
+    <!-- =====================================================
+         ATTENDANCE FORM
+         ===================================================== -->
+    <form method="POST" action="{{ url_for('admin_attendance') }}" id="attendanceForm">
+
+        <!-- Session Controls Card -->
+        <div class="dashboard-card" style="margin-bottom: 25px;">
+
+            <div class="card-header">
+                <div>
+                    <h2>1. Class & Lecture Details</h2>
+                    <p>Specify course, date and topic being taught</p>
+                </div>
+            </div>
+
+            <div class="form-grid-3">
+
+                <!-- Course Select -->
+                <div class="form-group">
+                    <label for="course_id">Course / Subject</label>
+                    <select
+                        name="course_id"
+                        id="course_id"
+                        class="form-control"
+                        onchange="reloadWithFilters()"
+                        required
+                    >
+                        {% for course in courses %}
+                        <option
+                            value="{{ course['id'] }}"
+                            {% if course['id'] == selected_course_id %}selected{% endif %}
+                        >
+                            {{ course["name"] }} ({{ course["code"] }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Date Picker -->
+                <div class="form-group">
+                    <label for="attendance_date">Attendance Date</label>
+                    <input
+                        type="date"
+                        id="attendance_date"
+                        name="attendance_date"
+                        class="form-control"
+                        value="{{ selected_date }}"
+                        onchange="reloadWithFilters()"
+                        required
+                    >
+                </div>
+
+                <!-- Lecture Topic -->
+                <div class="form-group">
+                    <label for="topic">Lecture Topic / Notes</label>
+                    <input
+                        type="text"
+                        id="topic"
+                        name="topic"
+                        class="form-control"
+                        placeholder="e.g. Python OOP & Methods"
+                        value="{{ existing_topic }}"
+                    >
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Student Roster Card -->
+        <div class="dashboard-card">
+
+            <div class="card-header" style="flex-wrap: wrap; gap: 15px;">
+                <div>
+                    <h2>2. Student Attendance Roster</h2>
+                    <p>Mark status for each student (Total: <strong>{{ students|length }}</strong> students)</p>
+                </div>
+
+                <!-- Bulk Action Buttons -->
+                <div class="bulk-actions-group">
+                    <button
+                        type="button"
+                        class="btn btn-bulk bulk-present"
+                        onclick="setAllStatus('Present')"
+                    >
+                        ✓ Mark All Present
+                    </button>
+                    <button
+                        type="button"
+                        class="btn btn-bulk bulk-absent"
+                        onclick="setAllStatus('Absent')"
+                    >
+                        ✗ Mark All Absent
+                    </button>
+                </div>
+            </div>
+
+            {% if students %}
+            <div class="table-wrapper">
+                <table class="student-table attendance-marking-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th>Roll Number</th>
+                            <th>Student Name</th>
+                            <th>College Email</th>
+                            <th style="min-width: 250px;">Attendance Status</th>
+                            <th style="min-width: 200px;">Remarks (Optional)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for st in students %}
+                        {% set current_status = existing_status_map.get(st["id"], "Present") %}
+                        {% set current_remark = existing_remarks_map.get(st["id"], "") %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td><strong>{{ st["roll_number"] }}</strong></td>
+                            <td>{{ st["name"] }}</td>
+                            <td><small>{{ st["email"] }}</small></td>
+                            <td>
+                                <!-- Status Selector Pills -->
+                                <div class="status-toggle-wrapper">
+                                    <label class="status-pill-label pill-present">
+                                        <input
+                                            type="radio"
+                                            name="status_{{ st['id'] }}"
+                                            value="Present"
+                                            class="status-radio-present"
+                                            {% if current_status == "Present" %}checked{% endif %}
+                                        >
+                                        <span>Present</span>
+                                    </label>
+
+                                    <label class="status-pill-label pill-absent">
+                                        <input
+                                            type="radio"
+                                            name="status_{{ st['id'] }}"
+                                            value="Absent"
+                                            class="status-radio-absent"
+                                            {% if current_status == "Absent" %}checked{% endif %}
+                                        >
+                                        <span>Absent</span>
+                                    </label>
+
+                                    <label class="status-pill-label pill-late">
+                                        <input
+                                            type="radio"
+                                            name="status_{{ st['id'] }}"
+                                            value="Late"
+                                            class="status-radio-late"
+                                            {% if current_status == "Late" %}checked{% endif %}
+                                        >
+                                        <span>Late</span>
+                                    </label>
+                                </div>
+                            </td>
+                            <td>
+                                <input
+                                    type="text"
+                                    name="remarks_{{ st['id'] }}"
+                                    class="form-control form-control-sm"
+                                    placeholder="Leave, sick, etc."
+                                    value="{{ current_remark }}"
+                                >
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Submit Button Bar -->
+            <div class="attendance-submit-bar">
+                <button type="submit" class="btn btn-primary btn-lg" style="background: #16a34a; padding: 12px 30px; font-size: 16px;">
+                    💾 Save Attendance Record
+                </button>
+                <a href="{{ url_for('admin_attendance_records') }}" class="btn btn-secondary">
+                    Cancel
+                </a>
+            </div>
+
+            {% else %}
+            <div class="empty-state">
+                <p>No active students found in the database.</p>
+            </div>
+            {% endif %}
+
+        </div>
+
+    </form>
+
+</div>
+
+<script>
+function setAllStatus(status) {
+    if (status === 'Present') {
+        document.querySelectorAll('.status-radio-present').forEach(el => el.checked = true);
+    } else if (status === 'Absent') {
+        document.querySelectorAll('.status-radio-absent').forEach(el => el.checked = true);
+    }
+}
+
+function reloadWithFilters() {
+    const courseId = document.getElementById('course_id').value;
+    const dateVal = document.getElementById('attendance_date').value;
+    window.location.href = "{{ url_for('admin_attendance') }}?course_id=" + courseId + "&date=" + dateVal;
+}
+</script>
+
+{% endblock %}

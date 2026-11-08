@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SyllabusX — Meerut Institute of Technology{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    {% block extra_head %}{% endblock %}
+</head>
+<body>
+
+<nav class="navbar">
+    <div class="nav-container">
+        <div class="logo">
+            <a href="{{ url_for('index') }}" style="color: inherit; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+                <span class="logo-badge">MIT</span>
+                <span style="font-size: 20px; font-weight: 800; letter-spacing: 0.5px;">SyllabusX</span>
+            </a>
+        </div>
+
+        <div class="nav-links">
+            {% if session.get("student_id") %}
+                <span class="user-pill student-pill">
+                    👤 Student: {{ session.get("student_name") }}
+                </span>
+                <a href="{{ url_for('student_dashboard') }}">
+                    Dashboard
+                </a>
+                <a href="{{ url_for('assessment_instructions') }}">
+                    Python Test
+                </a>
+                <a href="{{ url_for('student_attendance') }}">
+                    My Attendance
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-logout-btn">
+                    Logout
+                </a>
+            {% elif session.get("faculty_id") %}
+                <span class="user-pill faculty-pill">
+                    👨‍🏫 Faculty: {{ session.get("faculty_name") }}
+                </span>
+                <a href="{{ url_for('faculty_dashboard') }}">
+                    Faculty Dashboard
+                </a>
+                <a href="{{ url_for('faculty_register_student') }}">
+                    Register Student
+                </a>
+                <a href="{{ url_for('admin_attendance') }}">
+                    Mark Attendance
+                </a>
+                <a href="{{ url_for('faculty_logout') }}" class="nav-logout-btn">
+                    Logout
+                </a>
+            {% elif session.get("admin_id") %}
+                <span class="user-pill faculty-pill">
+                    🛡️ Admin: {{ session.get("admin_name") }}
+                </span>
+                <a href="{{ url_for('admin_dashboard') }}">
+                    Dashboard
+                </a>
+                <a href="{{ url_for('faculty_register_student') }}">
+                    Register Student
+                </a>
+                <a href="{{ url_for('admin_attendance') }}">
+                    Mark Attendance
+                </a>
+                <a href="{{ url_for('admin_attendance_records') }}">
+                    Attendance Records
+                </a>
+                <a href="{{ url_for('admin_logout') }}" class="nav-logout-btn">
+                    Logout
+                </a>
+            {% else %}
+                <a href="{{ url_for('login', tab='student') }}">
+                    Student Login
+                </a>
+                <a href="{{ url_for('login', tab='faculty') }}">
+                    Faculty Login
+                </a>
+                <a href="{{ url_for('admin_login') }}">
+                    Admin Login
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
+
+<main class="main-container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert {{ category }}">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    {% block content %}
+    {% endblock %}
+</main>
+
+<footer>
+    <p>
+        © Meerut Institute of Technology — SyllabusX Portal | Developed by Akhil
+    </p>
+</footer>
+
+</body>
+</html>

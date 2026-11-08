@@ -1,0 +1,365 @@
+{% extends "base.html" %}
+
+{% block title %}Student Registration — SyllabusX{% endblock %}
+
+{% block content %}
+<div class="auth-page" style="padding: 20px 0;">
+    <div class="auth-card" style="max-width: 540px; margin: auto;">
+        <div class="auth-header" style="margin-bottom: 20px;">
+            <div style="display: inline-block; background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px; font-size: 12px; font-weight: 800; margin-bottom: 8px;">
+                MEERUT INSTITUTE OF TECHNOLOGY • SIS
+            </div>
+            <h1 style="font-size: 24px; margin-bottom: 6px; color: #0f172a;">Student Academic Registration</h1>
+            <p style="font-size: 13px; color: #64748b; margin: 0;">Create your CIE assessment profile with UIDAI Aadhaar e-KYC binding</p>
+        </div>
+
+        <!-- Institutional Security Notice -->
+        <div style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 8px; padding: 12px; margin-bottom: 20px; font-size: 12px; color: #166534; line-height: 1.5;">
+            <strong>📌 Institutional Verification Mandate:</strong> In accordance with AKTU compliance guidelines, every student profile must be bound with their <strong>12-digit UIDAI Aadhaar card</strong> and verified through a real-time <strong>Mobile SMS OTP (+91)</strong>. Proxy or duplicate registrations are strictly prohibited.
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" autocomplete="on">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div class="form-group">
+                    <label for="name" style="font-size: 13px; font-weight: 700; color: #334155;">Full Name *</label>
+                    <input
+                        type="text"
+                        id="name"
+                        name="name"
+                        placeholder="e.g. Akhil Kumar"
+                        value="{{ form.get('name', '') if form else '' }}"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="roll_number" style="font-size: 13px; font-weight: 700; color: #334155;">University Roll No. *</label>
+                    <input
+                        type="text"
+                        id="roll_number"
+                        name="roll_number"
+                        placeholder="e.g. 210282010001"
+                        value="{{ form.get('roll_number', '') if form else '' }}"
+                        required
+                    >
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="email" style="font-size: 13px; font-weight: 700; color: #334155;">College Email ID *</label>
+                <input
+                    type="email"
+                    id="email"
+                    name="email"
+                    placeholder="student@college.edu"
+                    value="{{ form.get('email', '') if form else '' }}"
+                    required
+                >
+                <small style="color: #64748b; font-size: 11px;">Institutional Google Workspace email for CIE announcements &amp; scorecards.</small>
+            </div>
+
+            <!-- Mobile Number with SMS OTP Notice -->
+            <div class="form-group" style="background: #fdf4ff; border: 1px solid #f0abfc; border-radius: 8px; padding: 12px;">
+                <label for="mobile_number" style="font-size: 13px; font-weight: 700; color: #86198f; display: flex; justify-content: space-between;">
+                    <span>Indian Mobile Number (+91) *</span>
+                    <span style="font-size: 11px; font-weight: 800; background: #c026d3; color: white; padding: 1px 6px; border-radius: 4px;">OTP SENT HERE</span>
+                </label>
+                <input
+                    type="tel"
+                    id="mobile_number"
+                    name="mobile_number"
+                    placeholder="9876543210 or +919876543210"
+                    inputmode="tel"
+                    value="{{ form.get('mobile_number', '') if form else '' }}"
+                    style="border-color: #e879f9; background: white; margin-top: 6px;"
+                    required
+                >
+                <small style="color: #a21caf; font-size: 11px; margin-top: 4px;">
+                    📱 A 6-digit verification OTP will be dispatched via SMS directly to this number.
+                </small>
+            </div>
+
+            <!-- UIDAI Aadhaar Number & Attachment -->
+            <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 14px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase;">
+                        🇮🇳 UIDAI Aadhaar e-KYC Verification
+                    </span>
+                    <span style="font-size: 11px; font-weight: 700; color: #0284c7;">GOVT. RECOGNIZED</span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label for="aadhar_number" style="font-size: 13px; font-weight: 700; color: #334155;">12-Digit Aadhaar Card UID *</label>
+                    <input
+                        type="text"
+                        id="aadhar_number"
+                        name="aadhar_number"
+                        placeholder="XXXX-XXXX-XXXX (e.g. 5432-8765-9012)"
+                        maxlength="14"
+                        value="{{ form.get('aadhar_number', '') if form else '' }}"
+                        style="letter-spacing: 2px; font-weight: 600;"
+                        required
+                        oninput="formatAadharInput(this)"
+                    >
+                    <small style="color: #64748b; font-size: 11px;">Enrolled Aadhaar UID bound to student for biometric AI FaceRD login.</small>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label for="aadhar_card_file" style="font-size: 13px; font-weight: 700; color: #334155;">
+                        Attach Aadhaar Card Document / e-Aadhaar (PDF or Photo)
+                    </label>
+                    <input
+                        type="file"
+                        id="aadhar_card_file"
+                        name="aadhar_card_file"
+                        accept=".pdf,image/jpeg,image/png,image/webp"
+                        style="padding: 8px; font-size: 13px; border: 1px dashed #94a3b8; background: #ffffff; width: 100%; border-radius: 6px; cursor: pointer;"
+                    >
+                    <small style="color: #64748b; font-size: 11px;">Optional document upload for institutional records (Max 16 MB).</small>
+                </div>
+            </div>
+
+            <!-- AI Facial Biometric Enrollment (InsightFace) -->
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%); border: 1.5px solid #86efac; border-radius: 10px; padding: 14px; margin-bottom: 20px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span style="font-size: 12px; font-weight: 800; color: #166534; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+                        <span>📸</span> AI Face Biometric Enrollment *
+                    </span>
+                    <span style="font-size: 11px; font-weight: 800; background: #16a34a; color: white; padding: 2px 8px; border-radius: 4px;">
+                        INSIGHTFACE AI
+                    </span>
+                </div>
+                <p style="font-size: 12px; color: #475569; margin: 0 0 12px 0; line-height: 1.4;">
+                    Capture your face via live webcam or upload a clear front-facing photo. InsightFace will extract your unique 512-D ArcFace vectors to verify your identity and enable 1-click Face Login.
+                </p>
+
+                <!-- Action Buttons: Live Camera or Photo Upload -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                    <button type="button" id="btnOpenRegCam" onclick="startRegCamera()" style="background: #0284c7; color: white; border: none; padding: 9px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        📷 Open Live Webcam
+                    </button>
+                    <label for="regFaceFileInput" style="background: #ffffff; color: #0f172a; border: 1.5px solid #cbd5e1; padding: 9px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; text-align: center;">
+                        📁 Upload Passport Photo
+                    </label>
+                    <input type="file" id="regFaceFileInput" accept="image/jpeg,image/png,image/webp" style="display: none;" onchange="handleRegFileUpload(event)">
+                </div>
+
+                <!-- Live Webcam Viewport (Hidden until webcam opened) -->
+                <div id="regCamBox" style="display: none; position: relative; width: 100%; aspect-ratio: 4/3; max-height: 250px; background: #0b1329; border-radius: 8px; overflow: hidden; margin-bottom: 12px; border: 2px solid #38bdf8;">
+                    <video id="regVideo" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                    <div style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: #38bdf8; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; pointer-events: none;">
+                        ● LIVE CAMERA VIEW
+                    </div>
+                    <!-- Oval Face Targeting Guide -->
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 130px; height: 165px; border: 2px dashed #22c55e; border-radius: 50%; pointer-events: none; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);"></div>
+                    <div style="position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 10;">
+                        <button type="button" onclick="captureRegFace()" style="background: #22c55e; color: #052e16; border: none; font-weight: 800; font-size: 12px; padding: 8px 16px; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                            📸 Capture &amp; Enroll Face
+                        </button>
+                        <button type="button" onclick="stopRegCamera()" style="background: rgba(239, 68, 68, 0.9); color: white; border: none; font-weight: 700; font-size: 12px; padding: 8px 14px; border-radius: 20px; cursor: pointer;">
+                            ✕ Cancel
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Hidden Canvas for frame snapshot -->
+                <canvas id="regCanvas" style="display: none;"></canvas>
+
+                <!-- Captured Face Photo Preview & AI Status Strip -->
+                <div id="regFacePreviewContainer" style="display: none; background: white; border: 1.5px solid #86efac; border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <img id="regFacePreviewImg" src="" alt="Enrolled Face" style="width: 75px; height: 75px; object-fit: cover; border-radius: 8px; border: 2px solid #22c55e;">
+                        <div style="flex: 1;">
+                            <div id="regFaceStatusBadge" style="display: inline-block; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-bottom: 4px; background: #dcfce7; color: #15803d;">
+                                ● Face Ready
+                            </div>
+                            <div id="regFaceStatusText" style="font-size: 12px; color: #166534; font-weight: 600;">
+                                Facial photo captured.
+                            </div>
+                            <button type="button" onclick="retakeRegFace()" style="margin-top: 5px; background: none; border: none; color: #0284c7; font-size: 11px; font-weight: 700; cursor: pointer; padding: 0; text-decoration: underline;">
+                                🔄 Retake / Change Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden input containing base64 data for the captured/uploaded face -->
+                <input type="hidden" id="face_image_data" name="face_image_data" value="">
+
+                <div id="regFaceHelpText" style="font-size: 11px; color: #64748b;">
+                    * Mandatory for student verification. Make sure your face is clearly lit without sunglasses/mask.
+                </div>
+            </div>
+
+            <!-- Password Fields -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 14px;">
+                <div class="form-group">
+                    <label for="password" style="font-size: 13px; font-weight: 700; color: #334155;">Create Password *</label>
+                    <input
+                        type="password"
+                        id="password"
+                        name="password"
+                        placeholder="Min 6 characters"
+                        minlength="6"
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password" style="font-size: 13px; font-weight: 700; color: #334155;">Confirm Password *</label>
+                    <input
+                        type="password"
+                        id="confirm_password"
+                        name="confirm_password"
+                        placeholder="Re-enter password"
+                        required
+                    >
+                </div>
+            </div>
+
+            <button type="submit" id="regSubmitBtn" class="btn btn-primary full-width" style="background: #0284c7; padding: 13px; font-size: 15px; font-weight: 700; border-radius: 8px; border: none; color: white; cursor: pointer; width: 100%; margin-top: 6px;">
+                📱 Send Mobile OTP &amp; Continue Registration →
+            </button>
+        </form>
+
+        <div class="auth-links" style="margin-top: 20px; text-align: center; border-top: 1px solid #e2e8f0; padding-top: 14px;">
+            <p style="font-size: 13px; color: #64748b; margin: 0 0 4px 0;">Already registered with MIT Meerut SIS?</p>
+            <a href="{{ url_for('login', tab='student') }}" style="color: #0284c7; font-weight: 700; font-size: 13px; text-decoration: none;">
+                ← Back to Student SIS Login
+            </a>
+        </div>
+    </div>
+</div>
+
+<script>
+function formatAadharInput(input) {
+    let val = input.value.replace(/\D/g, '');
+    if (val.length > 12) val = val.substring(0, 12);
+    let parts = [];
+    for (let i = 0; i < val.length; i += 4) {
+        parts.push(val.substring(i, i + 4));
+    }
+    input.value = parts.join('-');
+}
+
+// ---------------------------------------------------------
+// INSIGHTFACE BIOMETRIC ENROLLMENT LOGIC
+// ---------------------------------------------------------
+let regStream = null;
+
+function startRegCamera() {
+    const box = document.getElementById('regCamBox');
+    const video = document.getElementById('regVideo');
+    box.style.display = 'block';
+
+    navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } } })
+    .then(stream => {
+        regStream = stream;
+        video.srcObject = stream;
+    })
+    .catch(err => {
+        alert('Webcam could not be opened or access was denied. Please use "Upload Passport Photo" instead.');
+        box.style.display = 'none';
+    });
+}
+
+function stopRegCamera() {
+    if (regStream) {
+        regStream.getTracks().forEach(t => t.stop());
+        regStream = null;
+    }
+    const box = document.getElementById('regCamBox');
+    if (box) box.style.display = 'none';
+}
+
+function captureRegFace() {
+    const video = document.getElementById('regVideo');
+    const canvas = document.getElementById('regCanvas');
+    if (!video || !video.videoWidth) {
+        alert('Webcam is not ready yet. Please wait a moment.');
+        return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+    stopRegCamera();
+    applyEnrolledFace(dataUrl);
+}
+
+function handleRegFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        applyEnrolledFace(evt.target.result);
+    };
+    reader.readAsDataURL(file);
+}
+
+function applyEnrolledFace(dataUrl) {
+    document.getElementById('face_image_data').value = dataUrl;
+    document.getElementById('regFacePreviewImg').src = dataUrl;
+    document.getElementById('regFacePreviewContainer').style.display = 'block';
+
+    const badge = document.getElementById('regFaceStatusBadge');
+    const text = document.getElementById('regFaceStatusText');
+    badge.textContent = '🔄 Verifying with InsightFace AI...';
+    badge.style.background = '#e0f2fe';
+    badge.style.color = '#0369a1';
+    text.textContent = 'Extracting 512-D ArcFace facial embedding...';
+
+    // Immediate asynchronous verification via backend endpoint
+    const fd = new URLSearchParams();
+    fd.append('face_image_data', dataUrl);
+
+    fetch('/api/verify-face-preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: fd.toString()
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            badge.textContent = '✓ InsightFace Verified';
+            badge.style.background = '#dcfce7';
+            badge.style.color = '#15803d';
+            text.innerHTML = `<strong>Face recognized!</strong> (${data.confidence}% confidence). ArcFace 512-D vector ready.`;
+        } else {
+            badge.textContent = '⚠️ Face Detection Issue';
+            badge.style.background = '#fee2e2';
+            badge.style.color = '#dc2626';
+            text.textContent = data.message || 'No human face detected. Please retake photo.';
+        }
+    })
+    .catch(() => {
+        badge.textContent = '● Photo Attached';
+        badge.style.background = '#dcfce7';
+        badge.style.color = '#15803d';
+        text.textContent = 'Photo attached. Will be validated upon submission.';
+    });
+}
+
+function retakeRegFace() {
+    document.getElementById('face_image_data').value = '';
+    document.getElementById('regFacePreviewContainer').style.display = 'none';
+    document.getElementById('regFaceFileInput').value = '';
+    startRegCamera();
+}
+
+// Intercept form submit to ensure face has been captured
+document.querySelector('form').addEventListener('submit', function(e) {
+    const faceVal = document.getElementById('face_image_data').value;
+    if (!faceVal || !faceVal.trim()) {
+        e.preventDefault();
+        alert('Please capture or upload your photo for Facial Biometric Enrollment (InsightFace) before continuing.');
+        const btn = document.getElementById('btnOpenRegCam');
+        if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+</script>
+{% endblock %}

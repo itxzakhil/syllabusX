@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+
+{% block title %}Register Student — SyllabusX{% endblock %}
+
+{% block content %}
+<div class="page-container" style="max-width: 720px; margin: 24px auto;">
+
+    <!-- Breadcrumb & Back -->
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <a href="{{ url_for('faculty_dashboard') }}" style="color: #0284c7; font-weight: 700; font-size: 13px; text-decoration: none; display: flex; align-items: center; gap: 6px;">
+            ← Back to Faculty Workstation
+        </a>
+        <span style="font-size: 12px; font-weight: 800; background: #e0f2fe; color: #0369a1; padding: 4px 10px; border-radius: 6px;">
+            FACULTY AUTHORIZED ENROLLMENT
+        </span>
+    </div>
+
+    <!-- Main Card -->
+    <div class="dashboard-card" style="border-top: 4px solid #0284c7; background: #ffffff; padding: 24px;">
+        <div style="margin-bottom: 20px; border-bottom: 1px solid #e2e8f0; padding-bottom: 14px;">
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span style="font-size: 26px;">🎓</span>
+                <h1 style="font-size: 22px; margin: 0; color: #0f172a;">Student Academic Registration</h1>
+            </div>
+            <p style="font-size: 13px; color: #64748b; margin: 4px 0 0 0;">
+                Register candidate profile with mandatory <strong>UIDAI Aadhaar binding</strong> and <strong>InsightFace 512-D ArcFace biometrics</strong>.
+            </p>
+        </div>
+
+        <form method="POST" action="{{ url_for('faculty_register_student') }}" enctype="multipart/form-data" id="studentRegForm">
+            <!-- 2-Column Fields Grid -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Full Name *</label>
+                    <input
+                        type="text"
+                        name="name"
+                        placeholder="e.g. Rahul Sharma"
+                        value="{{ form.get('name', '') if form else '' }}"
+                        required
+                        style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;"
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">University Roll No. *</label>
+                    <input
+                        type="text"
+                        name="roll_number"
+                        placeholder="e.g. 210282010045"
+                        value="{{ form.get('roll_number', '') if form else '' }}"
+                        required
+                        style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;"
+                    >
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">College Email ID *</label>
+                    <input
+                        type="email"
+                        name="email"
+                        placeholder="student@college.edu"
+                        value="{{ form.get('email', '') if form else '' }}"
+                        required
+                        style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;"
+                    >
+                    <small style="color: #64748b; font-size: 11px;">Institutional Google Workspace address.</small>
+                </div>
+
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Indian Mobile Number (+91) *</label>
+                    <input
+                        type="tel"
+                        name="mobile_number"
+                        placeholder="9876543210 or +919876543210"
+                        value="{{ form.get('mobile_number', '') if form else '' }}"
+                        required
+                        style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;"
+                    >
+                    <small style="color: #64748b; font-size: 11px;">Official contact for SMS alerts &amp; OTP.</small>
+                </div>
+            </div>
+
+            <!-- Aadhaar Block -->
+            <div style="background: #f8fafc; border: 1.5px solid #cbd5e1; border-radius: 8px; padding: 14px; margin-bottom: 18px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 12px; font-weight: 800; color: #0f172a; text-transform: uppercase;">
+                        🇮🇳 UIDAI Aadhaar e-KYC Verification
+                    </span>
+                    <span style="font-size: 11px; font-weight: 700; color: #0284c7;">GOVT. RECOGNIZED</span>
+                </div>
+
+                <div class="form-group" style="margin-bottom: 12px;">
+                    <label style="font-size: 13px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">12-Digit Aadhaar UID *</label>
+                    <input
+                        type="text"
+                        name="aadhar_number"
+                        placeholder="XXXX-XXXX-XXXX (e.g. 5432-8765-9012)"
+                        maxlength="14"
+                        value="{{ form.get('aadhar_number', '') if form else '' }}"
+                        oninput="formatAadharInput(this)"
+                        required
+                        style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-weight: 600; letter-spacing: 2px; box-sizing: border-box;"
+                    >
+                </div>
+
+                <div class="form-group" style="margin-bottom: 0;">
+                    <label style="font-size: 13px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Attach Aadhaar Document (PDF or Photo)</label>
+                    <input
+                        type="file"
+                        name="aadhar_card_file"
+                        accept=".pdf,image/jpeg,image/png,image/webp"
+                        style="padding: 8px; font-size: 13px; border: 1px dashed #94a3b8; background: #ffffff; width: 100%; border-radius: 6px; cursor: pointer; box-sizing: border-box;"
+                    >
+                    <small style="color: #64748b; font-size: 11px;">Optional document attachment for records (Max 16 MB).</small>
+                </div>
+            </div>
+
+            <!-- Password Fields -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 18px;">
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Student Account Password</label>
+                    <input
+                        type="password"
+                        name="password"
+                        placeholder="Leave blank for system default"
+                        minlength="6"
+                        style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;"
+                    >
+                    <small style="color: #64748b; font-size: 11px;">Leave blank to use the system-configured default password.</small>
+                </div>
+                <div class="form-group">
+                    <label style="font-size: 13px; font-weight: 700; color: #334155; display: block; margin-bottom: 4px;">Confirm Password</label>
+                    <input
+                        type="password"
+                        name="confirm_password"
+                        placeholder="Re-enter password if custom"
+                        style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;"
+                    >
+                </div>
+            </div>
+
+            <!-- Student Profile Photo Upload Block -->
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%); border: 1.5px solid #86efac; border-radius: 10px; padding: 16px; margin-bottom: 22px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 12px; font-weight: 800; color: #166534; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+                        <span>📸</span> Student Profile / Passport Photo *
+                    </span>
+                    <span style="font-size: 11px; font-weight: 800; background: #0284c7; color: white; padding: 2px 8px; border-radius: 4px;">
+                        DASHBOARD AVATAR
+                    </span>
+                </div>
+                <p style="font-size: 12px; color: #475569; margin: 0 0 12px 0; line-height: 1.4;">
+                    Capture student's photo via webcam or upload a passport photo file. This photo will be displayed on the Student SIS Portal and Faculty Dashboard roster.
+                </p>
+
+                <!-- Options: Live Cam or Photo Upload -->
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px;">
+                    <button type="button" id="btnOpenCam" onclick="startCamera()" style="background: #0284c7; color: white; border: none; padding: 10px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                        📷 Open Live Webcam
+                    </button>
+                    <label for="faceFileInput" style="background: #ffffff; color: #0f172a; border: 1.5px solid #cbd5e1; padding: 10px 14px; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 6px; margin: 0; text-align: center;">
+                        📁 Upload Passport Photo
+                    </label>
+                    <input type="file" id="faceFileInput" name="student_photo" accept="image/jpeg,image/png,image/webp" style="display: none;" onchange="handleFileUpload(event)">
+                </div>
+
+                <!-- Live Camera Viewport -->
+                <div id="camBox" style="display: none; position: relative; width: 100%; aspect-ratio: 4/3; max-height: 260px; background: #0b1329; border-radius: 8px; overflow: hidden; margin-bottom: 12px; border: 2px solid #38bdf8;">
+                    <video id="webcamVideo" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                    <div style="position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.6); color: #38bdf8; font-size: 11px; font-weight: 700; padding: 3px 8px; border-radius: 4px; pointer-events: none;">
+                        ● LIVE CAMERA VIEW
+                    </div>
+                    <!-- Oval Face Targeting Guide -->
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 135px; height: 170px; border: 2px dashed #22c55e; border-radius: 50%; pointer-events: none; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);"></div>
+                    <div style="position: absolute; bottom: 10px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; z-index: 10;">
+                        <button type="button" onclick="captureFace()" style="background: #22c55e; color: #052e16; border: none; font-weight: 800; font-size: 13px; padding: 8px 18px; border-radius: 20px; cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);">
+                            📸 Capture Photo
+                        </button>
+                        <button type="button" onclick="stopCamera()" style="background: rgba(239, 68, 68, 0.9); color: white; border: none; font-weight: 700; font-size: 12px; padding: 8px 14px; border-radius: 20px; cursor: pointer;">
+                            ✕ Cancel
+                        </button>
+                    </div>
+                </div>
+
+                <canvas id="snapshotCanvas" style="display: none;"></canvas>
+
+                <!-- Captured Face Photo Preview & AI Status Strip -->
+                <div id="previewContainer" style="display: none; background: white; border: 1.5px solid #86efac; border-radius: 8px; padding: 12px; margin-bottom: 8px;">
+                    <div style="display: flex; gap: 14px; align-items: center;">
+                        <img id="previewImg" src="" alt="Student Profile Photo" style="width: 75px; height: 75px; object-fit: cover; border-radius: 8px; border: 2px solid #22c55e;">
+                        <div style="flex: 1;">
+                            <div id="statusBadge" style="display: inline-block; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-bottom: 4px; background: #dcfce7; color: #15803d;">
+                                ● Photo Ready
+                            </div>
+                            <div id="statusText" style="font-size: 12px; color: #166534; font-weight: 600;">
+                                Student profile photo attached.
+                            </div>
+                            <button type="button" onclick="retakeFace()" style="margin-top: 5px; background: none; border: none; color: #0284c7; font-size: 11px; font-weight: 700; cursor: pointer; padding: 0; text-decoration: underline;">
+                                🔄 Retake / Change Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hidden Input containing the base64 snapshot -->
+                <input type="hidden" id="face_image_data" name="face_image_data" value="">
+
+                <small style="display: block; color: #64748b; font-size: 11px;">
+                    * Clear front-facing passport photo or webcam picture.
+                </small>
+            </div>
+
+            <button type="submit" class="btn btn-primary full-width" style="background: #0284c7; padding: 13px; font-size: 15px; font-weight: 800; border-radius: 8px; border: none; color: white; cursor: pointer; width: 100%;">
+                ✓ Register &amp; Enroll Student Directly →
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+function formatAadharInput(input) {
+    let val = input.value.replace(/\D/g, '');
+    if (val.length > 12) val = val.substring(0, 12);
+    let parts = [];
+    for (let i = 0; i < val.length; i += 4) {
+        parts.push(val.substring(i, i + 4));
+    }
+    input.value = parts.join('-');
+}
+
+let localStream = null;
+
+function startCamera() {
+    const box = document.getElementById('camBox');
+    const video = document.getElementById('webcamVideo');
+    box.style.display = 'block';
+
+    navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } } })
+    .then(stream => {
+        localStream = stream;
+        video.srcObject = stream;
+    })
+    .catch(err => {
+        alert('Webcam could not be opened or access was denied. Please use "Upload Passport Photo" instead.');
+        box.style.display = 'none';
+    });
+}
+
+function stopCamera() {
+    if (localStream) {
+        localStream.getTracks().forEach(t => t.stop());
+        localStream = null;
+    }
+    const box = document.getElementById('camBox');
+    if (box) box.style.display = 'none';
+}
+
+function captureFace() {
+    const video = document.getElementById('webcamVideo');
+    const canvas = document.getElementById('snapshotCanvas');
+    if (!video || !video.videoWidth) {
+        alert('Webcam is not ready yet. Please wait a moment.');
+        return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+    stopCamera();
+    applyFace(dataUrl);
+}
+
+function handleFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        applyFace(evt.target.result);
+    };
+    reader.readAsDataURL(file);
+}
+
+function applyFace(dataUrl) {
+    document.getElementById('face_image_data').value = dataUrl;
+    document.getElementById('previewImg').src = dataUrl;
+    document.getElementById('previewContainer').style.display = 'block';
+
+    const badge = document.getElementById('statusBadge');
+    const text = document.getElementById('statusText');
+    badge.textContent = '● Photo Attached';
+    badge.style.background = '#dcfce7';
+    badge.style.color = '#15803d';
+    text.textContent = 'Student passport photo attached. Will be saved to profile.';
+}
+
+function retakeFace() {
+    document.getElementById('face_image_data').value = '';
+    document.getElementById('previewContainer').style.display = 'none';
+    document.getElementById('faceFileInput').value = '';
+    startCamera();
+}
+
+// Ensure photo is provided before submit
+document.getElementById('studentRegForm').addEventListener('submit', function(e) {
+    const faceVal = document.getElementById('face_image_data').value;
+    const fileInput = document.getElementById('faceFileInput');
+    if ((!faceVal || !faceVal.trim()) && (!fileInput.files || fileInput.files.length === 0)) {
+        e.preventDefault();
+        alert('Please capture or upload the student photo before submitting registration.');
+        const btn = document.getElementById('btnOpenCam');
+        if (btn) btn.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+});
+</script>
+{% endblock %}

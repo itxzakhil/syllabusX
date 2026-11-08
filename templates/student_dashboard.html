@@ -1,0 +1,552 @@
+{% extends "base.html" %}
+
+{% block title %}Student Dashboard — SyllabusX{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- =====================================================
+         X-ERP INSTITUTIONAL BANNER
+         ===================================================== -->
+    <div class="college-badge-banner">
+        <div class="college-crest-icon">🏛️</div>
+        <div class="college-info">
+            <h2>Meerut Institute of Technology, Meerut</h2>
+            <p>Student Information System (SIS) • Department of Computer Science &amp; Engineering</p>
+            <span class="college-tagline">Academic Session: 2026-27 | B.Tech CSE | Semester V | College Code: 282</span>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         STUDENT WELCOME HEADER
+         ===================================================== -->
+    <div class="dashboard-header" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px;">
+        <div style="display: flex; align-items: center; gap: 18px;">
+            <div style="position: relative; flex-shrink: 0;">
+                {% if student['face_photo'] %}
+                    <img src="{{ url_for('static', filename='uploads/face_profiles/' + student['face_photo']) }}" 
+                         alt="{{ student['name'] }}" 
+                         style="width: 84px; height: 84px; border-radius: 50%; object-fit: cover; border: 3px solid #0284c7; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);"
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ student.name | urlencode }}&background=0284c7&color=fff&size=168';">
+                {% else %}
+                    <div style="width: 84px; height: 84px; border-radius: 50%; background: linear-gradient(135deg, #0284c7, #1e3a8a); color: white; display: flex; align-items: center; justify-content: center; font-size: 32px; font-weight: 800; border: 3px solid #0284c7; box-shadow: 0 4px 14px rgba(2, 132, 199, 0.25);">
+                        {{ student['name'][:1]|upper }}
+                    </div>
+                {% endif %}
+                <span style="position: absolute; bottom: 3px; right: 3px; width: 15px; height: 15px; background: #16a34a; border: 2.5px solid white; border-radius: 50%;" title="Active Student Account"></span>
+            </div>
+            <div>
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                    <span class="portal-badge" style="background: #0284c7; color: white;">STUDENT SIS PORTAL</span>
+                    <span class="status-badge status-active">Enrolled Regular Student</span>
+                </div>
+                <h1 style="margin: 0 0 4px 0;">Welcome, {{ student["name"] }}</h1>
+                <p style="margin: 0;">
+                    University Roll No: <strong>{{ student["roll_number"] }}</strong> | 
+                    Email: {{ student["email"] }} | 
+                    Program: <strong>B.Tech Computer Science &amp; Engineering</strong>
+                </p>
+            </div>
+        </div>
+        <div class="header-action-buttons">
+            <a href="{{ url_for('student_results') }}" class="btn btn-primary" style="background: #1e3a8a; font-weight: 700;">
+                CIE Marksheet
+            </a>
+            <a href="{{ url_for('campus_timetable') }}" class="btn btn-secondary" style="font-weight: 700;">
+                Today's Timetable
+            </a>
+            <a href="{{ url_for('student_attendance') }}" class="btn btn-primary" style="background: #059669; font-weight: 700;">
+                📊 View Attendance Register
+            </a>
+            <a href="{{ url_for('course_selection') }}" class="btn btn-primary" style="font-weight: 700;">
+                💻 Open CodeTech Labs →
+            </a>
+            <button type="button" onclick="togglePasswordModal()" class="btn btn-secondary" style="font-weight: 700;">
+                🔑 Change Password
+            </button>
+        </div>
+    </div>
+
+    <!-- AKTU Attendance Shortage Warning Alert -->
+    {% if attendance_summary and not attendance_summary.is_eligible %}
+    <div style="background: #fef2f2; border: 1.5px solid #f87171; border-radius: 12px; padding: 16px 20px; margin-bottom: 24px; display: flex; align-items: center; gap: 16px; box-shadow: 0 4px 12px rgba(220, 38, 38, 0.08);">
+        <div style="font-size: 32px;">⚠️</div>
+        <div>
+            <h4 style="color: #991b1b; margin: 0 0 4px 0; font-size: 15px; font-weight: 800;">AKTU Attendance Shortage Alert</h4>
+            <p style="color: #7f1d1d; margin: 0; font-size: 13px; line-height: 1.5;">
+                Your cumulative attendance is currently <strong>{{ attendance_summary.percentage }}%</strong> (minimum required: <strong>75%</strong>). You have missed <strong>{{ attendance_summary.absent_count }}</strong> lecture(s). Under AKTU exam regulations, students with short attendance are detained from semester exams. Please attend upcoming lectures regularly.
+            </p>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- =====================================================
+         CODETECH PROGRAMMING LABS & CIE ASSESSMENTS
+         ===================================================== -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h2>💻 Continuous Internal Evaluation (CIE) &amp; Programming Labs</h2>
+                <p>Curriculum-aligned examinations combining Theory MCQs &amp; Automated CodeTech Lab Test Cases</p>
+            </div>
+            <div>
+                <span class="portal-badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700;">CodeTech Automated Lab Engine</span>
+            </div>
+        </div>
+
+        <div class="courses-assessment-grid">
+            <!-- 1. C PROGRAMMING -->
+            <div class="course-card-item">
+                <div>
+                    <div class="course-card-head">
+                        <div class="course-icon-badge">⚙️</div>
+                        <div>
+                            {% if assessments_by_course and assessments_by_course.get('C') and assessments_by_course.get('C')['status'] == 'completed' %}
+                                <span class="chip-strength">✓ Evaluated &amp; Graded</span>
+                            {% elif assessments_by_course and assessments_by_course.get('C') and assessments_by_course.get('C')['status'] in ['mcq', 'mcq_completed', 'coding'] %}
+                                <span class="chip-moderate">In Progress</span>
+                            {% else %}
+                                <span class="course-meta-tag">Available for Exam</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <h3>BCS301: C Programming &amp; Data Structures Lab</h3>
+                    <p style="font-size: 13px; color: #64748b; margin: 6px 0;">Units 1–5: Pointers, memory allocation, arrays, strings, structures, and algorithmic problems.</p>
+                    <div class="course-meta-tags">
+                        <span class="course-meta-tag">Theory CIE: 20 MCQs</span>
+                        <span class="course-meta-tag">Lab Test: 3 Challenges</span>
+                        <span class="course-meta-tag">Total: 50 Marks</span>
+                    </div>
+
+                    {% if assessments_by_course and assessments_by_course.get('C') and assessments_by_course.get('C')['status'] == 'completed' %}
+                        <div style="background: #ecfdf5; border-radius: 8px; padding: 10px; margin-top: 10px; font-size: 13px; color: #065f46;">
+                            <strong>Theory CIE:</strong> {{ assessments_by_course.get('C')['mcq_score'] }}/{{ assessments_by_course.get('C')['mcq_total'] }} &nbsp;|&nbsp;
+                            <strong>CodeTech Lab:</strong> {{ assessments_by_course.get('C')['coding_score'] }}/{{ assessments_by_course.get('C')['coding_total'] }} (Passed)
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-top: 15px;">
+                    {% if assessments_by_course and assessments_by_course.get('C') and assessments_by_course.get('C')['status'] == 'completed' %}
+                        <button class="btn btn-secondary full-width" disabled style="opacity: 0.7;">Examination Completed</button>
+                    {% elif assessments_by_course and assessments_by_course.get('C') and assessments_by_course.get('C')['status'] in ['mcq', 'mcq_completed', 'coding'] %}
+                        <a href="{{ url_for('assessment_instructions') }}?course_code=C" class="btn btn-primary full-width" style="background: #d97706; text-align: center;">Resume C Assessment →</a>
+                    {% else %}
+                        <a href="{{ url_for('assessment_instructions') }}?course_code=C" class="btn btn-primary full-width" style="text-align: center;">Start C Programming Exam →</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 2. JAVA PROGRAMMING -->
+            <div class="course-card-item">
+                <div>
+                    <div class="course-card-head">
+                        <div class="course-icon-badge">☕</div>
+                        <div>
+                            {% if assessments_by_course and assessments_by_course.get('JAVA') and assessments_by_course.get('JAVA')['status'] == 'completed' %}
+                                <span class="chip-strength">✓ Evaluated &amp; Graded</span>
+                            {% elif assessments_by_course and assessments_by_course.get('JAVA') and assessments_by_course.get('JAVA')['status'] in ['mcq', 'mcq_completed', 'coding'] %}
+                                <span class="chip-moderate">In Progress</span>
+                            {% else %}
+                                <span class="course-meta-tag">Available for Exam</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <h3>BCS401: Java Programming &amp; OOP Lab</h3>
+                    <p style="font-size: 13px; color: #64748b; margin: 6px 0;">Units 1–5: OOP, classes, inheritance, polymorphism, exceptions, and collections framework.</p>
+                    <div class="course-meta-tags">
+                        <span class="course-meta-tag">Theory CIE: 20 MCQs</span>
+                        <span class="course-meta-tag">Lab Test: 3 Challenges</span>
+                        <span class="course-meta-tag">Total: 50 Marks</span>
+                    </div>
+
+                    {% if assessments_by_course and assessments_by_course.get('JAVA') and assessments_by_course.get('JAVA')['status'] == 'completed' %}
+                        <div style="background: #ecfdf5; border-radius: 8px; padding: 10px; margin-top: 10px; font-size: 13px; color: #065f46;">
+                            <strong>Theory CIE:</strong> {{ assessments_by_course.get('JAVA')['mcq_score'] }}/{{ assessments_by_course.get('JAVA')['mcq_total'] }} &nbsp;|&nbsp;
+                            <strong>CodeTech Lab:</strong> {{ assessments_by_course.get('JAVA')['coding_score'] }}/{{ assessments_by_course.get('JAVA')['coding_total'] }} (Passed)
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-top: 15px;">
+                    {% if assessments_by_course and assessments_by_course.get('JAVA') and assessments_by_course.get('JAVA')['status'] == 'completed' %}
+                        <button class="btn btn-secondary full-width" disabled style="opacity: 0.7;">Examination Completed</button>
+                    {% elif assessments_by_course and assessments_by_course.get('JAVA') and assessments_by_course.get('JAVA')['status'] in ['mcq', 'mcq_completed', 'coding'] %}
+                        <a href="{{ url_for('assessment_instructions') }}?course_code=JAVA" class="btn btn-primary full-width" style="background: #d97706; text-align: center;">Resume Java Assessment →</a>
+                    {% else %}
+                        <a href="{{ url_for('assessment_instructions') }}?course_code=JAVA" class="btn btn-primary full-width" style="text-align: center;">Start Java Programming Exam →</a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- 3. PYTHON PROGRAMMING -->
+            <div class="course-card-item">
+                <div>
+                    <div class="course-card-head">
+                        <div class="course-icon-badge">🐍</div>
+                        <div>
+                            {% if assessments_by_course and assessments_by_course.get('PYTHON') and assessments_by_course.get('PYTHON')['status'] == 'completed' %}
+                                <span class="chip-strength">✓ Evaluated &amp; Graded</span>
+                            {% elif assessments_by_course and assessments_by_course.get('PYTHON') and assessments_by_course.get('PYTHON')['status'] in ['mcq', 'mcq_completed', 'coding'] %}
+                                <span class="chip-moderate">In Progress</span>
+                            {% else %}
+                                <span class="course-meta-tag">Available for Exam</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <h3>BCS201: Python Programming &amp; Problem Solving Lab</h3>
+                    <p style="font-size: 13px; color: #64748b; margin: 6px 0;">Units 1–5: Syntax, functions, data structures, and algorithmic scripting problem solving.</p>
+                    <div class="course-meta-tags">
+                        <span class="course-meta-tag">Theory CIE: 20 MCQs</span>
+                        <span class="course-meta-tag">Lab Test: 3 Challenges</span>
+                        <span class="course-meta-tag">Total: 50 Marks</span>
+                    </div>
+
+                    {% if assessments_by_course and assessments_by_course.get('PYTHON') and assessments_by_course.get('PYTHON')['status'] == 'completed' %}
+                        <div style="background: #ecfdf5; border-radius: 8px; padding: 10px; margin-top: 10px; font-size: 13px; color: #065f46;">
+                            <strong>Theory CIE:</strong> {{ assessments_by_course.get('PYTHON')['mcq_score'] }}/{{ assessments_by_course.get('PYTHON')['mcq_total'] }} &nbsp;|&nbsp;
+                            <strong>CodeTech Lab:</strong> {{ assessments_by_course.get('PYTHON')['coding_score'] }}/{{ assessments_by_course.get('PYTHON')['coding_total'] }} (Passed)
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div style="margin-top: 15px;">
+                    {% if assessments_by_course and assessments_by_course.get('PYTHON') and assessments_by_course.get('PYTHON')['status'] == 'completed' %}
+                        <button class="btn btn-secondary full-width" disabled style="opacity: 0.7;">Examination Completed</button>
+                    {% elif assessments_by_course and assessments_by_course.get('PYTHON') and assessments_by_course.get('PYTHON')['status'] in ['mcq', 'mcq_completed', 'coding'] %}
+                        <a href="{{ url_for('assessment_instructions') }}?course_code=PYTHON" class="btn btn-primary full-width" style="background: #d97706; text-align: center;">Resume Python Assessment →</a>
+                    {% else %}
+                        <a href="{{ url_for('assessment_instructions') }}?course_code=PYTHON" class="btn btn-primary full-width" style="text-align: center;">Start Python Exam →</a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- =====================================================
+         COURSE OUTCOME (CO) ATTAINMENT & OBE METRICS
+         ===================================================== -->
+    <div class="skill-passport-box">
+        <div class="card-header">
+            <div>
+                <h2>📈 Course Outcome (CO) Attainment &amp; Academic Competencies</h2>
+                <p>Outcome-Based Education (OBE) evaluation mapped to syllabus units &amp; lab outcomes (NBA Criterion 3)</p>
+            </div>
+            <div>
+                <span class="portal-badge" style="background: #1e3a8a; color: white;">CO Attainment Index: {{ skill_analytics.skill_index if skill_analytics else 78 }}%</span>
+            </div>
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 15px;">
+            <!-- Competency Dimension Bars -->
+            <div>
+                <h4 style="margin-bottom: 12px; color: #1e293b;">Course Outcome (CO) Attainment Breakdown</h4>
+                {% if skill_analytics and skill_analytics.competencies %}
+                    {% for comp in skill_analytics.competencies %}
+                    <div class="skill-bar-row">
+                        <div class="skill-bar-labels">
+                            <span>{{ comp.name }}</span>
+                            <span>{{ comp.score }}%</span>
+                        </div>
+                        <div class="skill-bar-track">
+                            <div class="skill-bar-fill" style="width: {{ comp.score }}%; background: {% if comp.score >= 75 %}#16a34a{% elif comp.score >= 50 %}#ca8a04{% else %}#dc2626{% endif %};"></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="skill-bar-row">
+                        <div class="skill-bar-labels"><span>CO1: Core Syntax &amp; Procedural Logic</span><span>85%</span></div>
+                        <div class="skill-bar-track"><div class="skill-bar-fill" style="width: 85%; background: #16a34a;"></div></div>
+                    </div>
+                    <div class="skill-bar-row">
+                        <div class="skill-bar-labels"><span>CO2: Algorithmic Problem Solving &amp; Data Structures</span><span>70%</span></div>
+                        <div class="skill-bar-track"><div class="skill-bar-fill" style="width: 70%; background: #ca8a04;"></div></div>
+                    </div>
+                    <div class="skill-bar-row">
+                        <div class="skill-bar-labels"><span>CO3: Object-Oriented Architecture &amp; Modular Design</span><span>65%</span></div>
+                        <div class="skill-bar-track"><div class="skill-bar-fill" style="width: 65%; background: #ca8a04;"></div></div>
+                    </div>
+                    <div class="skill-bar-row">
+                        <div class="skill-bar-labels"><span>CO4: Memory Management &amp; Pointer Allocation</span><span>52%</span></div>
+                        <div class="skill-bar-track"><div class="skill-bar-fill" style="width: 52%; background: #ca8a04;"></div></div>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Theory vs Lab Practical Correlation -->
+            <div>
+                <h4 style="margin-bottom: 12px; color: #1e293b;">Theory CIE vs Lab Practical Correlation</h4>
+                <p style="font-size: 13px; color: #64748b;">Evaluates theoretical concept retention against hands-on coding execution accuracy.</p>
+
+                <div class="correlation-box" style="margin-top: 10px;">
+                    <div class="correlation-metric">
+                        <span style="font-size: 12px; color: #64748b; font-weight: 700;">THEORY ASSESSMENT (MCQ)</span>
+                        <strong style="color: #2563eb;">{{ skill_analytics.mcq_pct if skill_analytics else 78 }}%</strong>
+                    </div>
+                    <div class="correlation-metric">
+                        <span style="font-size: 12px; color: #64748b; font-weight: 700;">LAB PRACTICAL (CODING)</span>
+                        <strong style="color: #059669;">{{ skill_analytics.coding_pct if skill_analytics else 67 }}%</strong>
+                    </div>
+                </div>
+
+                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-top: 12px; font-size: 13px; color: #334155;">
+                    <strong>Academic Evaluation:</strong> {{ skill_analytics.diagnostic_label if skill_analytics else "Balanced Foundation — Continued practice in coding implementation recommended." }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Topic-wise Strengths and Gaps -->
+        <div style="margin-top: 25px; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                <div>
+                    <h5 style="color: #15803d; margin-bottom: 8px;">✓ Mastered Syllabus Units</h5>
+                    <div class="chips-container">
+                        <span class="chip-strength">Unit 1: Fundamentals &amp; Syntax</span>
+                        <span class="chip-strength">Unit 2: Loops &amp; Conditionals</span>
+                        <span class="chip-strength">Unit 3: Function Modularization</span>
+                    </div>
+                </div>
+                <div>
+                    <h5 style="color: #b91c1c; margin-bottom: 8px;">⚠ Priority Units for Tutorial Focus</h5>
+                    <div class="chips-container">
+                        <span class="chip-gap">Unit 4: Dynamic Pointer Allocation</span>
+                        <span class="chip-gap">Unit 5: Interface Abstraction</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- =====================================================
+         ATTENDANCE SECTION (X-ERP STYLE)
+         ===================================================== -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h2>📅 Official Lecture Attendance Register</h2>
+                <p>Mandatory 75% attendance rule under University / AKTU examination regulations</p>
+            </div>
+            <div>
+                {% if attendance_summary %}
+                    {% if attendance_summary.is_eligible %}
+                        <span class="status-badge status-active" style="background: #dcfce7; color: #15803d; font-size: 13px; font-weight: 700;">
+                            ✓ Exam Eligible ({{ attendance_summary.percentage }}%)
+                        </span>
+                    {% else %}
+                        <span class="status-badge" style="background: #fee2e2; color: #dc2626; font-size: 13px; font-weight: 700;">
+                            ⚠ Attendance Shortage ({{ attendance_summary.percentage }}%)
+                        </span>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+        {% if attendance_summary %}
+        <!-- Attendance Stats Cards -->
+        <div class="stats-grid" style="margin-bottom: 25px;">
+            <div class="stat-card">
+                <div class="stat-title">Lectures Delivered</div>
+                <div class="stat-number">{{ attendance_summary.total_classes }}</div>
+                <div class="stat-description">Total lectures held</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">Lectures Attended</div>
+                <div class="stat-number text-green">{{ attendance_summary.attended_classes }}</div>
+                <div class="stat-description">Present + Late</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">Absences</div>
+                <div class="stat-number text-red">{{ attendance_summary.absent_count }}</div>
+                <div class="stat-description">Unexcused leaves</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-title">Late Arrivals</div>
+                <div class="stat-number text-amber">{{ attendance_summary.late_count }}</div>
+                <div class="stat-description">Marked late</div>
+            </div>
+        </div>
+
+        <!-- Attendance Progress Bar -->
+        <div class="attendance-progress-container">
+            <div class="progress-labels">
+                <span>Attendance Progress (University Rule: Min 75%)</span>
+                <strong>{{ attendance_summary.percentage }}%</strong>
+            </div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill {% if attendance_summary.is_eligible %}fill-green{% else %}fill-red{% endif %}"
+                     style="width: {{ attendance_summary.percentage }}%;"></div>
+            </div>
+        </div>
+
+        <!-- Recent Attendance Records -->
+        <h3 style="margin: 25px 0 12px 0; font-size: 16px;">Recent Muster Roll Records</h3>
+        {% if recent_attendance %}
+        <div class="table-wrapper">
+            <table class="student-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Subject / Course</th>
+                        <th>Lecture Topic</th>
+                        <th>Faculty</th>
+                        <th>Status</th>
+                        <th>Remarks</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in recent_attendance %}
+                    <tr>
+                        <td><strong>{{ row["attendance_date"] }}</strong></td>
+                        <td>{{ row["course_name"] }}</td>
+                        <td>{{ row["topic"] or "Regular Lecture" }}</td>
+                        <td>{{ row["faculty_name"] or "Faculty Member" }}</td>
+                        <td>
+                            {% if row["status"] == "Present" %}
+                                <span class="badge-present">● Present</span>
+                            {% elif row["status"] == "Absent" %}
+                                <span class="badge-absent">● Absent</span>
+                            {% else %}
+                                <span class="badge-late">● Late</span>
+                            {% endif %}
+                        </td>
+                        <td><small>{{ row["remarks"] or "—" }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% endif %}
+
+        <div style="margin-top: 15px; text-align: right;">
+            <a href="{{ url_for('student_attendance') }}" class="btn btn-secondary">
+                View Complete Attendance History &amp; Monthly Muster Roll →
+            </a>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No attendance has been recorded for you yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+
+    <!-- =====================================================
+         PROFILE SECTION
+         ===================================================== -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h2>Registered Student Profile</h2>
+                <p>Academic details registered with Meerut Institute of Technology</p>
+            </div>
+            <div>
+                <span class="portal-badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700;">Verified Institutional Profile</span>
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 24px; align-items: flex-start; flex-wrap: wrap;">
+            <div style="text-align: center; padding: 14px; background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; min-width: 140px; flex-shrink: 0;">
+                {% if student['face_photo'] %}
+                    <img src="{{ url_for('static', filename='uploads/face_profiles/' + student['face_photo']) }}" 
+                         alt="{{ student['name'] }}" 
+                         style="width: 120px; height: 140px; border-radius: 8px; object-fit: cover; border: 2px solid #cbd5e1; box-shadow: 0 4px 10px rgba(0,0,0,0.08); display: block; margin: 0 auto;"
+                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ student.name | urlencode }}&background=0284c7&color=fff&size=200';">
+                {% else %}
+                    <div style="width: 120px; height: 140px; border-radius: 8px; background: #e2e8f0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; font-size: 12px; margin: 0 auto;">
+                        <span style="font-size: 40px; margin-bottom: 4px;">👤</span>
+                        No Photo
+                    </div>
+                {% endif %}
+                <div style="font-size: 11px; font-weight: 800; color: #0284c7; margin-top: 8px; text-transform: uppercase;">Official Student Photo</div>
+                <div style="font-size: 11px; color: #64748b;">Roll: {{ student["roll_number"] }}</div>
+            </div>
+
+            <div class="profile-grid" style="flex: 1; min-width: 260px;">
+                <div class="profile-item">
+                    <span class="profile-label">Student Full Name</span>
+                    <strong>{{ student["name"] }}</strong>
+                </div>
+                <div class="profile-item">
+                    <span class="profile-label">University Roll Number</span>
+                    <strong>{{ student["roll_number"] }}</strong>
+                </div>
+                <div class="profile-item">
+                    <span class="profile-label">College Email ID</span>
+                    <strong>{{ student["email"] }}</strong>
+                </div>
+                <div class="profile-item">
+                    <span class="profile-label">Enrollment Status</span>
+                    <strong>{{ student["status"]|title }}</strong>
+                </div>
+                <div class="profile-item">
+                    <span class="profile-label">Registered Mobile</span>
+                    <strong>{{ student["mobile_number"] or "Not Provided" }}</strong>
+                </div>
+                <div class="profile-item">
+                    <span class="profile-label">Last Session Login</span>
+                    <strong>{{ student["last_login"] or "Today" }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- College Notice -->
+    <div class="notice-card">
+        <h3>🏛️ University Examination &amp; Academic Guidelines</h3>
+        <ul>
+            <li><strong>75% Mandatory Attendance:</strong> Students must maintain at least 75% attendance in theory &amp; lab sessions to be eligible for end-semester examinations.</li>
+            <li><strong>CodeTech Proctoring:</strong> Switching browser windows, minimization, or navigation during active exam sessions triggers immediate termination.</li>
+            <li>For any attendance discrepancy, contact your respective subject faculty member within 3 working days.</li>
+        </ul>
+    </div>
+
+    <!-- Footer Actions -->
+    <div class="dashboard-footer">
+        <a href="{{ url_for('logout') }}" class="btn btn-secondary">
+            Logout of Student Portal
+        </a>
+    </div>
+
+</div>
+
+
+    <!-- Change Password Modal -->
+    <div id="passwordModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: white; border-radius: 14px; max-width: 440px; width: 90%; padding: 26px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 12px;">
+                <h3 style="margin: 0; font-size: 18px; color: #0f172a; font-weight: 800;">🔑 Change Account Password</h3>
+                <button type="button" onclick="togglePasswordModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
+            </div>
+            <form action="{{ url_for('student_change_password') }}" method="POST">
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 4px;">Current Password *</label>
+                    <input type="password" name="current_password" required placeholder="Enter current password" style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 4px;">New Password (Min 6 chars) *</label>
+                    <input type="password" name="new_password" required minlength="6" placeholder="Enter new password" style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 4px;">Confirm New Password *</label>
+                    <input type="password" name="confirm_password" required minlength="6" placeholder="Re-enter new password" style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" onclick="togglePasswordModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background: #16a34a; font-weight: 700;">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+    function togglePasswordModal() {
+        var m = document.getElementById('passwordModal');
+        m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+    }
+    </script>
+{% endblock %}

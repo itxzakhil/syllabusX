@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Verify Mobile — SyllabusX{% endblock %}
+
+{% block content %}
+<div class="auth-page">
+    <div class="auth-card" style="max-width: 500px;">
+        <div class="auth-header">
+            <div style="font-size: 32px; margin-bottom: 8px;">📱</div>
+            <h1 style="font-size: 24px; margin-bottom: 6px;">Verify Mobile SMS Passcode</h1>
+            <p style="font-size: 13px; color: #64748b; margin: 0;">Step 2 of 2: Aadhaar Card &amp; Mobile e-KYC Verification</p>
+        </div>
+
+        <!-- Student & Aadhaar Meta Box -->
+        <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px; margin-bottom: 20px; font-size: 13px;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                <span style="color: #64748b;">Candidate Name:</span>
+                <strong style="color: #0f172a;">{{ pending.name }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                <span style="color: #64748b;">University Roll No:</span>
+                <span style="font-family: monospace; font-weight: 700; color: #0284c7;">{{ pending.roll_number }}</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                <span style="color: #64748b;">Target Gmail Account:</span>
+                <strong style="color: #0284c7;">{{ pending.masked_email or pending.email }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between; margin-bottom: 6px;">
+                <span style="color: #64748b;">Target Mobile Phone SIM:</span>
+                <strong style="color: #7c3aed;">{{ pending.masked_mobile }}</strong>
+            </div>
+            <div style="display: flex; justify-content: space-between;">
+                <span style="color: #64748b;">Linked Aadhaar UID:</span>
+                <span style="font-family: monospace; font-weight: 700; color: #15803d; background: #dcfce7; padding: 1px 6px; border-radius: 4px;">
+                    {{ pending.aadhar_number }} (Enrolled)
+                </span>
+            </div>
+        </div>
+
+        <!-- Dual Delivery Notice Banner -->
+        <div class="campus-otp-badge" style="background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 14px; text-align: center; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                <span style="font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; background: #16a34a; color: #fff;">
+                    🚀 DUAL DELIVERY: GMAIL + MOBILE SIM
+                </span>
+                <span style="font-size: 11px; color: #15803d; font-weight: 700;">Valid for 10 min</span>
+            </div>
+            <div style="font-weight: 800; font-size: 14px; color: #14532d; margin-bottom: 6px;">✓ 6-Digit Passcode Sent to Gmail &amp; Mobile Phone</div>
+            <div style="font-size: 12px; color: #166534; line-height: 1.5;">
+                A verification code has been dispatched directly to your Gmail inbox (<strong>{{ pending.masked_email or pending.email }}</strong>) and your mobile SIM (<strong>{{ pending.masked_mobile }}</strong>). Check either and enter the 6-digit code below.
+            </div>
+        </div>
+
+        <!-- Verification Form -->
+        <form method="POST" action="{{ url_for('register_verify_mobile_otp') }}">
+            <div class="form-group">
+                <label for="otp" style="text-align: center; display: block; font-weight: 700; margin-bottom: 8px;">
+                    Enter 6-Digit Mobile Verification Passcode
+                </label>
+                <input
+                    type="text"
+                    id="otp"
+                    name="otp"
+                    maxlength="6"
+                    placeholder="• • • • • •"
+                    value=""
+                    style="text-align: center; font-size: 22px; font-weight: 800; letter-spacing: 8px; padding: 12px; border: 2px solid #a855f7; border-radius: 8px; width: 100%; box-sizing: border-box;"
+                    required
+                    autofocus
+                >
+            </div>
+
+            <button type="submit" class="btn btn-primary full-width" style="background: #16a34a; padding: 12px; font-size: 15px; font-weight: 700; border-radius: 8px; border: none; color: white; cursor: pointer; width: 100%;">
+                ✓ Verify Mobile OTP &amp; Activate Account →
+            </button>
+        </form>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 20px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+            <form method="POST" action="{{ url_for('register_resend_mobile_otp') }}" style="margin: 0;">
+                <button type="submit" style="background: none; border: none; color: #0284c7; font-weight: 700; font-size: 13px; cursor: pointer; padding: 0;">
+                    🔄 Resend Mobile SMS OTP
+                </button>
+            </form>
+            <a href="{{ url_for('register') }}" style="color: #64748b; font-size: 13px; text-decoration: none;">
+                ← Change Details
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}

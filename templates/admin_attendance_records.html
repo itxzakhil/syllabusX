@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Attendance Records — SyllabusX{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- College Institutional Banner -->
+    <div class="college-badge-banner">
+        <div class="college-crest-icon">🏛️</div>
+        <div class="college-info">
+            <h2>Meerut Institute of Technology</h2>
+            <p>Faculty Attendance Register • Department of Computer Science &amp; Engineering</p>
+            <span class="college-tagline">Cumulative Muster Roll &amp; University Eligibility Audit • Department of Computer Science &amp; Engineering</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="portal-badge faculty-badge-style">ATTENDANCE SYSTEM</span>
+                <span class="status-badge status-active">Records &amp; Analytics</span>
+            </div>
+            <h1>Attendance Records &amp; Reports</h1>
+            <p>Comprehensive attendance records, session logs and student eligibility matrix</p>
+        </div>
+
+        <div class="header-action-buttons">
+            <a href="{{ url_for('export_attendance_csv') }}" class="btn btn-secondary" style="background: #0284c7; color: white; border-color: #0284c7; font-weight: 700;">
+                📥 Export to Excel / CSV
+            </a>
+            <a href="{{ url_for('admin_attendance') }}" class="btn btn-primary" style="background: #16a34a; font-weight: 700;">
+                + Take New Attendance
+            </a>
+            {% if session.get('faculty_id') %}
+            <a href="{{ url_for('faculty_dashboard') }}" class="btn btn-secondary">
+                ← Faculty Dashboard
+            </a>
+            {% else %}
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                ← Admin Dashboard
+            </a>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <!-- =====================================================
+         OVERALL KPI STATS
+         ===================================================== -->
+    <div class="stats-grid">
+
+        <div class="stat-card">
+            <div class="stat-title">Total Sessions Held</div>
+            <div class="stat-number">{{ attendance_stats.session_count }}</div>
+            <div class="stat-description">Lectures recorded to date</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Overall Average %</div>
+            <div class="stat-number {% if attendance_stats.avg_percentage >= 75 %}text-green{% else %}text-red{% endif %}">
+                {{ attendance_stats.avg_percentage }}%
+            </div>
+            <div class="stat-description">Average college student attendance</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Students in Good Standing</div>
+            <div class="stat-number text-green">{{ attendance_stats.good_count }}</div>
+            <div class="stat-description">Attendance ≥ 75% (Eligible)</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Attendance Shortage Alert</div>
+            <div class="stat-number text-red">{{ attendance_stats.shortage_count }}</div>
+            <div class="stat-description">Students &lt; 75% requirement</div>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         TABS: SESSIONS vs STUDENT MATRIX
+         ===================================================== -->
+    <div class="portal-tabs" style="max-width: 500px; margin: 0 0 25px 0;">
+        <button
+            type="button"
+            class="portal-tab active"
+            id="tabSessionsBtn"
+            onclick="switchRecordView('sessions')"
+        >
+            📅 Session History ({{ sessions|length }})
+        </button>
+        <button
+            type="button"
+            class="portal-tab"
+            id="tabMatrixBtn"
+            onclick="switchRecordView('matrix')"
+        >
+            👥 Student Matrix ({{ students_matrix|length }})
+        </button>
+    </div>
+
+
+    <!-- =====================================================
+         VIEW 1: SESSION HISTORY TABLE
+         ===================================================== -->
+    <div id="sessionsViewWrapper" class="dashboard-card">
+
+        <div class="card-header">
+            <div>
+                <h2>Conducted Academic Sessions</h2>
+                <p>Click "Edit / View" to update attendance or notes for any past lecture</p>
+            </div>
+            <div>
+                <a href="{{ url_for('admin_attendance') }}" class="btn btn-primary btn-sm" style="background: #16a34a;">
+                    + Mark Attendance
+                </a>
+            </div>
+        </div>
+
+        {% if sessions %}
+        <div class="table-wrapper">
+            <table class="student-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Course / Subject</th>
+                        <th>Lecture Topic</th>
+                        <th>Faculty</th>
+                        <th>Enrolled</th>
+                        <th>Present</th>
+                        <th>Absent</th>
+                        <th>Attendance %</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for session in sessions %}
+                    <tr>
+                        <td>
+                            <strong>{{ session["attendance_date"] }}</strong>
+                        </td>
+                        <td>
+                            <span class="course-pill">{{ session["course_name"] }}</span>
+                        </td>
+                        <td>
+                            {{ session["topic"] or "Regular Class Lecture" }}
+                        </td>
+                        <td>
+                            <small>{{ session["faculty_name"] or "Faculty" }}</small>
+                        </td>
+                        <td>{{ session["total_students"] }}</td>
+                        <td>
+                            <span class="text-green" style="font-weight: 600;">{{ session["present_count"] }}</span>
+                        </td>
+                        <td>
+                            <span class="text-red" style="font-weight: 600;">{{ session["absent_count"] }}</span>
+                        </td>
+                        <td>
+                            <span class="attendance-badge {% if session['percentage'] >= 75 %}good{% else %}warning{% endif %}">
+                                {{ session["percentage"] }}%
+                            </span>
+                        </td>
+                        <td>
+                            <a
+                                href="{{ url_for('admin_attendance', date=session['attendance_date'], course_id=session['course_id']) }}"
+                                class="btn btn-sm btn-secondary"
+                            >
+                                Edit / View
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No attendance sessions have been recorded yet.</p>
+            <a href="{{ url_for('admin_attendance') }}" class="btn btn-primary" style="margin-top: 15px;">
+                Mark Your First Attendance Session
+            </a>
+        </div>
+        {% endif %}
+
+    </div>
+
+
+    <!-- =====================================================
+         VIEW 2: STUDENT ATTENDANCE MATRIX
+         ===================================================== -->
+    <div id="matrixViewWrapper" class="dashboard-card" style="display: none;">
+
+        <div class="card-header">
+            <div>
+                <h2>Student Attendance Register</h2>
+                <p>Individual student attendance status and university exam eligibility</p>
+            </div>
+        </div>
+
+        {% if students_matrix %}
+        <div class="table-wrapper">
+            <table class="student-table">
+                <thead>
+                    <tr>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Email</th>
+                        <th>Total Classes</th>
+                        <th>Present</th>
+                        <th>Absent</th>
+                        <th style="min-width: 140px;">Attendance %</th>
+                        <th>Eligibility Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in students_matrix %}
+                    {% set st = item.student %}
+                    {% set sm = item.summary %}
+                    <tr>
+                        <td><strong>{{ st["roll_number"] }}</strong></td>
+                        <td>{{ st["name"] }}</td>
+                        <td><small>{{ st["email"] }}</small></td>
+                        <td>{{ sm.total_classes }}</td>
+                        <td class="text-green" style="font-weight: 600;">{{ sm.present_count }}</td>
+                        <td class="text-red" style="font-weight: 600;">{{ sm.absent_count }}</td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div class="progress-bar-bg" style="width: 70px; height: 8px; margin: 0;">
+                                    <div class="progress-bar-fill {% if sm.is_eligible %}fill-green{% else %}fill-red{% endif %}"
+                                         style="width: {{ sm.percentage }}%;"></div>
+                                </div>
+                                <span class="attendance-badge {% if sm.is_eligible %}good{% else %}warning{% endif %}">
+                                    {{ sm.percentage }}%
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            {% if sm.is_eligible %}
+                                <span class="eligibility-badge eligible" style="padding: 4px 10px; font-size: 11px;">
+                                    ✓ Eligible
+                                </span>
+                            {% else %}
+                                <span class="eligibility-badge shortage" style="padding: 4px 10px; font-size: 11px;">
+                                    ⚠ Shortage Alert
+                                </span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a
+                                href="{{ url_for('student_detail', student_id=st['id']) }}"
+                                class="view-link"
+                            >
+                                View Profile
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No student data available.</p>
+        </div>
+        {% endif %}
+
+    </div>
+
+
+    <!-- Footer Actions -->
+    <div class="dashboard-footer" style="margin-top: 30px;">
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+            ← Return to Faculty Dashboard
+        </a>
+    </div>
+
+</div>
+
+<script>
+function switchRecordView(view) {
+    const sessionsBtn = document.getElementById('tabSessionsBtn');
+    const matrixBtn = document.getElementById('tabMatrixBtn');
+    const sessionsWrapper = document.getElementById('sessionsViewWrapper');
+    const matrixWrapper = document.getElementById('matrixViewWrapper');
+
+    if (view === 'matrix') {
+        matrixBtn.classList.add('active');
+        sessionsBtn.classList.remove('active');
+        matrixWrapper.style.display = 'block';
+        sessionsWrapper.style.display = 'none';
+    } else {
+        sessionsBtn.classList.add('active');
+        matrixBtn.classList.remove('active');
+        sessionsWrapper.style.display = 'block';
+        matrixWrapper.style.display = 'none';
+    }
+}
+</script>
+
+{% endblock %}

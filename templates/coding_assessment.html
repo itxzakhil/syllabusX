@@ -1,0 +1,1561 @@
+{% extends "base.html" %}
+
+{% block title %}{{ assessment.course_name }} — Phase 2 CodeTech Lab Compiler | MIT Meerut{% endblock %}
+
+{% block content %}
+<style>
+/* ============================================================
+   CODETECH PHASE 2: AUTOMATED CODING COMPILER & SANDBOX
+   ============================================================ */
+.codetech-wrap {
+    max-width: 1460px;
+    margin: 15px auto;
+    padding: 0 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* CodeTech Top Bar */
+.ct-topbar {
+    background: #0f172a;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 16px 22px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.ct-title-group h1 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    color: #f8fafc;
+}
+
+.ct-meta-line {
+    font-size: 13px;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.ct-badge-phase {
+    background: #0284c7;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.ct-timer-box {
+    background: #1e293b;
+    border: 2px solid #334155;
+    border-radius: 10px;
+    padding: 8px 18px;
+    text-align: center;
+    min-width: 130px;
+}
+
+.ct-timer-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+.ct-timer-val {
+    font-size: 22px;
+    font-weight: 800;
+    font-family: "Consolas", monospace;
+    color: #38bdf8;
+}
+
+.ct-timer-val.danger {
+    color: #ef4444;
+}
+
+/* Problem Navigation Pills */
+.ct-nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+}
+
+.ct-nav-pills {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ct-pill {
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.ct-pill:hover {
+    border-color: #0284c7;
+    background: #f0f9ff;
+    color: #0284c7;
+}
+
+.ct-pill.active {
+    background: #0284c7;
+    color: #ffffff;
+    border-color: #0284c7;
+}
+
+/* Split-Screen IDE Grid */
+.ct-ide-grid {
+    display: grid;
+    grid-template-columns: 460px 1fr;
+    gap: 16px;
+    align-items: start;
+}
+
+/* Left Column: Problem Details & Proctor */
+.ct-left-col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.ct-problem-pane {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 22px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    max-height: 480px;
+    overflow-y: auto;
+}
+
+.ct-problem-header {
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+
+.ct-problem-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #0f172a;
+    margin-bottom: 8px;
+}
+
+.ct-tags-row {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.ct-tag {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: #f1f5f9;
+    color: #475569;
+}
+
+.ct-problem-body {
+    font-size: 14px;
+    line-height: 1.65;
+    color: #334155;
+    white-space: pre-wrap;
+    margin-bottom: 16px;
+}
+
+.ct-spec-box {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+}
+
+.ct-spec-box h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #64748b;
+    margin: 0 0 6px 0;
+}
+
+/* Proctoring Card */
+.ct-proctor-card {
+    background: #0f172a;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 16px;
+    border: 1px solid #334155;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.ct-proctor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.ct-proctor-header h3 {
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ct-video-frame {
+    position: relative;
+    width: 100%;
+    height: 180px;
+    background: #000000;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    border: 1px solid #334155;
+}
+
+.ct-video-frame video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+}
+
+.ct-hud-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.ct-proctor-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    font-size: 11px;
+    margin-bottom: 8px;
+}
+
+.ct-proctor-pill {
+    background: #1e293b;
+    padding: 5px 8px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.ct-proctor-pill.alert {
+    background: #450a0a !important;
+    color: #f87171 !important;
+    border-color: #ef4444 !important;
+}
+
+.ct-strike-indicator {
+    background: #1e293b;
+    border-radius: 6px;
+    padding: 6px 10px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    border: 1px solid #334155;
+}
+
+.ct-eval-drawer {
+    margin-top: 8px;
+    background: #09101d;
+    border: 1px dashed #334155;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 11px;
+}
+
+.ct-eval-drawer summary {
+    color: #94a3b8;
+    cursor: pointer;
+    font-weight: 700;
+    outline: none;
+}
+
+.ct-eval-btn-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.ct-eval-btn {
+    border: 1px solid #475569;
+    background: #1e293b;
+    color: #cbd5e1;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.ct-eval-btn:hover {
+    background: #334155;
+    color: #ffffff;
+}
+
+/* Right Column: Code Editor & Dual Console */
+.ct-editor-pane {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    display: flex;
+    flex-direction: column;
+}
+
+.ct-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 12px;
+}
+
+.ct-lang-tag {
+    background: #eff6ff;
+    color: #1d4ed8;
+    border: 1px solid #bfdbfe;
+    font-size: 13px;
+    font-weight: 700;
+    padding: 5px 12px;
+    border-radius: 6px;
+}
+
+.ct-code-textarea {
+    width: 100%;
+    min-height: 340px;
+    box-sizing: border-box;
+    background: #0f172a;
+    color: #f8fafc;
+    border: 0;
+    border-radius: 10px;
+    padding: 18px;
+    font-family: "Consolas", "Courier New", monospace;
+    font-size: 14px;
+    line-height: 1.55;
+    resize: vertical;
+    outline: none;
+    tab-size: 4;
+    white-space: pre;
+    overflow-wrap: normal;
+    overflow-x: auto;
+}
+
+/* Console Drawer & Tabs */
+.ct-console-drawer {
+    margin-top: 16px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 10px;
+    padding: 14px;
+}
+
+.ct-console-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 12px;
+    border-bottom: 1px solid #cbd5e1;
+    padding-bottom: 8px;
+}
+
+.ct-console-tab-btn {
+    border: 0;
+    background: transparent;
+    font-size: 13px;
+    font-weight: 700;
+    color: #64748b;
+    padding: 6px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+}
+
+.ct-console-tab-btn.active {
+    background: #0284c7;
+    color: #ffffff;
+}
+
+/* Tab 1: Custom Input Grid */
+.ct-custom-input-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.ct-input-box textarea {
+    width: 100%;
+    height: 90px;
+    box-sizing: border-box;
+    padding: 10px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    resize: none;
+}
+
+.ct-output-box pre {
+    width: 100%;
+    height: 90px;
+    box-sizing: border-box;
+    padding: 10px;
+    background: #0f172a;
+    color: #e2e8f0;
+    border-radius: 8px;
+    font-family: Consolas, monospace;
+    font-size: 13px;
+    overflow-y: auto;
+    margin: 0;
+    white-space: pre-wrap;
+}
+
+/* Tab 2: Automated Test Cases Results */
+.ct-testcases-container {
+    display: none;
+}
+
+.ct-testcases-summary {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 12px;
+}
+
+.ct-tc-badge {
+    font-size: 12px;
+    font-weight: 800;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.ct-tc-badge.pass {
+    background: #dcfce7;
+    color: #15803d;
+}
+
+.ct-tc-badge.fail {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.ct-tc-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-height: 220px;
+    overflow-y: auto;
+}
+
+.ct-tc-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px 14px;
+    font-size: 12px;
+}
+
+.ct-tc-card.pass {
+    border-left: 4px solid #16a34a;
+}
+
+.ct-tc-card.fail {
+    border-left: 4px solid #dc2626;
+}
+
+.ct-tc-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-weight: 700;
+}
+
+.ct-tc-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 8px;
+    font-family: Consolas, monospace;
+    background: #f8fafc;
+    padding: 6px 10px;
+    border-radius: 6px;
+}
+
+/* Action Controls */
+.ct-action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.ct-btn {
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ct-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+
+.ct-btn-run {
+    background: #059669;
+    color: #ffffff;
+}
+
+.ct-btn-run:hover:not(:disabled) {
+    background: #047857;
+}
+
+.ct-btn-tc {
+    background: #0284c7;
+    color: #ffffff;
+}
+
+.ct-btn-tc:hover:not(:disabled) {
+    background: #0369a1;
+}
+
+.ct-btn-prev {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+.ct-btn-next {
+    background: #0284c7;
+    color: #ffffff;
+}
+
+.ct-btn-submit {
+    background: #dc2626;
+    color: #ffffff;
+}
+
+.ct-btn-submit:hover:not(:disabled) {
+    background: #b91c1c;
+}
+
+/* Violation Modal */
+.violation-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.88);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+.violation-modal-backdrop.show {
+    display: flex;
+}
+
+.violation-modal {
+    background: #ffffff;
+    border-radius: 14px;
+    max-width: 500px;
+    width: 90%;
+    padding: 28px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+}
+
+@media (max-width: 1024px) {
+    .ct-ide-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<div class="codetech-wrap" id="codingWrap">
+
+    <!-- Top Bar -->
+    <div class="ct-topbar">
+        <div class="ct-title-group">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <span class="ct-badge-phase">Phase 2: Automated Lab Compiler</span>
+                <span style="font-size: 13px; color: #94a3b8;">•</span>
+                <span style="font-size: 12px; color: #38bdf8; font-weight: 700;">CodeTech AI Sandbox: Active</span>
+            </div>
+            <h1>{{ assessment.course_name }} — Automated Practical Examination</h1>
+            <div class="ct-meta-line">
+                <span>🏛️ Meerut Institute of Technology</span>
+                <span>•</span>
+                <span>Department of Computer Science</span>
+                <span>•</span>
+                <span>Problem {{ question_number }} of {{ total_questions }}</span>
+            </div>
+        </div>
+
+        <div class="ct-timer-box">
+            <div class="ct-timer-label">Time Remaining</div>
+            <div class="ct-timer-val" id="timer">--:--</div>
+        </div>
+    </div>
+
+    <!-- Problem Navigation Bar -->
+    <div class="ct-nav-bar">
+        <div class="ct-nav-pills">
+            <span style="font-size: 13px; font-weight: 700; color: #475569; margin-right: 6px;">Problems:</span>
+            {% for p_num in range(1, total_questions + 1) %}
+            <button type="button"
+                    class="ct-pill {% if p_num == question_number %}active{% endif %}"
+                    onclick="switchProblem({{ p_num }})">
+                Problem {{ p_num }}
+            </button>
+            {% endfor %}
+        </div>
+
+        <div style="font-size: 13px; color: #64748b;">
+            All code drafts autosaved upon navigation
+        </div>
+    </div>
+
+    <!-- CodeTech Split Screen IDE Grid -->
+    <div class="ct-ide-grid">
+
+        <!-- Left Column: Problem Specification & Proctor -->
+        <div class="ct-left-col">
+
+            <div class="ct-problem-pane">
+                <div class="ct-problem-header">
+                    <div class="ct-problem-title">Problem {{ question_number }}: {{ question.question_text.splitlines()[0] if question.question_text else 'Programming Task' }}</div>
+                    <div class="ct-tags-row">
+                        <span class="ct-tag" style="background: #e0f2fe; color: #0369a1;">{{ question.points or 10 }} Marks</span>
+                        <span class="ct-tag">{{ question.unit or "Continuous Evaluation" }}</span>
+                        <span class="ct-tag">{{ question.topic or "Standard Algorithms" }}</span>
+                    </div>
+                </div>
+
+                <div class="ct-problem-body">{{ question.question_text }}</div>
+
+                {% if question.coding_input_description %}
+                <div class="ct-spec-box">
+                    <h4>Input / Output Format</h4>
+                    <div>{{ question.coding_input_description }}</div>
+                </div>
+                {% endif %}
+
+                <div class="ct-spec-box">
+                    <h4>Execution Constraints</h4>
+                    <div style="font-family: Consolas, monospace; font-size: 12px; color: #475569;">
+                        • CPU Time Limit: 3.0 Seconds<br>
+                        • Memory Limit: 256 MB<br>
+                        • Standard I/O: stdin / stdout
+                    </div>
+                </div>
+            </div>
+
+            <!-- Real-Time AI Proctor Widget -->
+            <div class="ct-proctor-card">
+                <div class="ct-proctor-header">
+                    <h3>🛡️ AI Proctor Live Monitor</h3>
+                    <span style="font-size: 11px; font-weight: 700; color: #34d399; background: #064e3b; padding: 2px 8px; border-radius: 4px;">
+                        ● SECURE
+                    </span>
+                </div>
+
+                <div class="ct-video-frame">
+                    <video id="proctorVideo" autoplay playsinline muted></video>
+                    <canvas id="proctorHudCanvas" class="ct-hud-canvas"></canvas>
+                    <canvas id="proctorOffscreen" width="160" height="120" style="display: none;"></canvas>
+                </div>
+
+                <div class="ct-proctor-grid">
+                    <div class="ct-proctor-pill" id="multiFacePill">
+                        <span>👥 Faces:</span>
+                        <strong id="multiFaceText" style="color: #4ade80;">1 Verified</strong>
+                    </div>
+                    <div class="ct-proctor-pill" id="mobileDetectPill">
+                        <span>📱 Phone:</span>
+                        <strong id="mobileDetectText" style="color: #4ade80;">Clear</strong>
+                    </div>
+                    <div class="ct-proctor-pill" id="gazePill">
+                        <span>👀 Gaze:</span>
+                        <strong id="gazeText" style="color: #4ade80;">Focused</strong>
+                    </div>
+                    <div class="ct-proctor-pill" id="cameraPill">
+                        <span>📷 Cam:</span>
+                        <strong id="cameraText" style="color: #4ade80;">Active</strong>
+                    </div>
+                </div>
+
+                <div class="ct-strike-indicator">
+                    <span>Security Infraction Strikes</span>
+                    <strong id="strikeBadge" style="color: #f59e0b;">0 / 3 Strikes</strong>
+                </div>
+
+                <!-- Simulation Controls for Evaluators -->
+                <details class="ct-eval-drawer">
+                    <summary>🧪 Live Proctoring Test Triggers (Click to Test Strikes)</summary>
+                    <div class="ct-eval-btn-group">
+                        <button type="button" class="ct-eval-btn" onclick="testTriggerViolation('multiface', '2 Faces Detected in IDE View')">
+                            👥 Test Multi-Face
+                        </button>
+                        <button type="button" class="ct-eval-btn" onclick="testTriggerViolation('mobiledetect', 'Mobile Phone Held in Frame')">
+                            📱 Test Mobile
+                        </button>
+                        <button type="button" class="ct-eval-btn" onclick="testTriggerViolation('looking_away', 'Candidate Looking Away / Head Turned')">
+                            👀 Test Head Turn
+                        </button>
+                    </div>
+                </details>
+            </div>
+
+        </div>
+
+        <!-- Right Column: Code Editor & Execution Consoles -->
+        <div class="ct-editor-pane">
+
+            <div class="ct-editor-header">
+                <div class="ct-lang-tag">
+                    {% if (assessment.course_code or '').upper() == 'C' %}
+                        ⚙️ C (GCC 11.2 / C11 Standard)
+                    {% elif (assessment.course_code or '').upper() == 'JAVA' %}
+                        ☕ Java (OpenJDK 17 / Java 17)
+                    {% else %}
+                        🐍 Python (Python 3.12 Sandbox)
+                    {% endif %}
+                </div>
+
+                <div>
+                    <button type="button"
+                            onclick="resetStarterCode()"
+                            style="border: 1px solid #cbd5e1; background: #f8fafc; padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer; color: #475569;">
+                        ↺ Reset Template
+                    </button>
+                </div>
+            </div>
+
+            <!-- Code Editor Area -->
+            <textarea id="code"
+                      class="ct-code-textarea"
+                      spellcheck="false"
+                      placeholder="Write your solution here...">{{ saved_code }}</textarea>
+
+            <!-- Console Drawer with Tabs -->
+            <div class="ct-console-drawer">
+
+                <div class="ct-console-tabs">
+                    <button type="button"
+                            class="ct-console-tab-btn active"
+                            id="tabBtnCustom"
+                            onclick="switchConsoleTab('custom')">
+                        ▶ Custom Input (stdin)
+                    </button>
+                    <button type="button"
+                            class="ct-console-tab-btn"
+                            id="tabBtnTestcases"
+                            onclick="switchConsoleTab('testcases')">
+                        ⚡ Automated Test Cases Evaluation
+                    </button>
+                </div>
+
+                <!-- Tab 1: Custom Input -->
+                <div id="tabContentCustom" class="ct-custom-input-grid">
+                    <div class="ct-input-box">
+                        <label style="font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Custom Input (stdin)</label>
+                        <textarea id="inputData" placeholder="Enter custom test input...">{{ saved_input }}</textarea>
+                    </div>
+                    <div class="ct-output-box">
+                        <label style="font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Standard Output (stdout / stderr)</label>
+                        <pre id="output">Click "Compile &amp; Run Code" to execute with custom input.</pre>
+                    </div>
+                </div>
+
+                <!-- Tab 2: Automated Test Cases -->
+                <div id="tabContentTestcases" class="ct-testcases-container">
+                    <div class="ct-testcases-summary" id="tcSummaryBox">
+                        <div>
+                            <strong style="color: #0f172a;">Sample &amp; Hidden Test Cases</strong>
+                            <div style="font-size: 12px; color: #64748b;" id="tcSummarySubtitle">
+                                Click "Run All Test Cases" to verify correctness
+                            </div>
+                        </div>
+                        <div>
+                            <span class="ct-tc-badge" id="tcScoreBadge" style="display: none;"></span>
+                        </div>
+                    </div>
+
+                    <div class="ct-tc-list" id="tcList">
+                        <div style="padding: 20px; text-align: center; color: #94a3b8; font-size: 13px;">
+                            No test case execution recorded yet.
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Action Controls -->
+            <div class="ct-action-bar">
+                <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+                    <button type="button" class="ct-btn ct-btn-run" id="runCustomBtn" onclick="runCustomInput()">
+                        ▶ Compile &amp; Run Code
+                    </button>
+                    <button type="button" class="ct-btn ct-btn-tc" id="runTcBtn" onclick="runAllTestCases()">
+                        ⚡ Run All Test Cases
+                    </button>
+                    <span id="runStatusMsg" style="font-size: 13px; color: #64748b; font-weight: 600;"></span>
+                </div>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    {% if question_number > 1 %}
+                    <button type="button" class="ct-btn ct-btn-prev" onclick="switchProblem({{ question_number - 1 }})">
+                        ← Previous Problem
+                    </button>
+                    {% endif %}
+
+                    {% if question_number < total_questions %}
+                    <button type="button" class="ct-btn ct-btn-next" onclick="switchProblem({{ question_number + 1 }})">
+                        Save &amp; Next Problem →
+                    </button>
+                    {% else %}
+                    <button type="button" class="ct-btn ct-btn-submit" onclick="finishExamination()">
+                        ✓ Submit Lab Examination
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<!-- Violation Modal -->
+<div class="violation-modal-backdrop" id="violationModal">
+    <div class="violation-modal">
+        <div style="font-size: 48px; margin-bottom: 10px;">⚠️</div>
+        <h3 id="violationTitle" style="color: #dc2626; font-size: 20px; margin-bottom: 8px;">Security Violation Warning</h3>
+        <p id="violationDesc" style="color: #475569; font-size: 14px; line-height: 1.5; margin-bottom: 18px;">
+            An unauthorized activity was detected by the real-time AI proctor.
+        </p>
+        <div id="violationStrikeBox" style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 8px; padding: 12px; color: #991b1b; font-weight: 700; margin-bottom: 18px;">
+            Strike 1 of 3
+        </div>
+        <button type="button" onclick="dismissViolationModal()" style="background: #dc2626; color: #ffffff; border: 0; border-radius: 8px; padding: 10px 20px; font-weight: 700; width: 100%; cursor: pointer;">
+            I Understand &amp; Continue Lab Assessment
+        </button>
+    </div>
+</div>
+
+<!-- TensorFlow.js & COCO-SSD Neural Network Model for Precision Object & Mobile Detection -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+
+<script>
+(function() {
+    'use strict';
+
+    const assessmentId = {{ assessment.id|tojson }};
+    const questionId = {{ question.id|tojson }};
+    const currentQNum = {{ question_number|tojson }};
+    const totalQuestions = {{ total_questions|tojson }};
+    const remainingAtLoad = {{ remaining_seconds|tojson }};
+
+    const runUrl = {{ url_for('run_coding_code', assessment_id=assessment.id)|tojson }};
+    const runTcUrl = {{ url_for('run_coding_testcases', assessment_id=assessment.id)|tojson }};
+    const actionUrl = {{ url_for('coding_question', assessment_id=assessment.id, question_number=question_number)|tojson }};
+    const proctorLogUrl = {{ url_for('proctor_log')|tojson }};
+    const loginUrl = {{ url_for('login')|tojson }};
+
+    let remainingSeconds = Number(remainingAtLoad);
+    let strikes = 0;
+    const maxStrikes = 3;
+    let isTerminated = false;
+    let isLeaving = false;
+
+    // COCO-SSD Neural Network State
+    let cocoModel = null;
+    let isCocoModelLoaded = false;
+    let isDetectingObjects = false;
+    let lastPhoneDetection = null;
+
+    // Asynchronously load COCO-SSD MobileNet Neural Detector
+    if (window.cocoSsd) {
+        cocoSsd.load({ base: 'lite_mobilenet_v2' }).then(model => {
+            cocoModel = model;
+            isCocoModelLoaded = true;
+            console.log('CodeTech AI Proctor: Neural Mobile & Object Detector Activated (COCO-SSD).');
+        }).catch(err => {
+            console.warn('COCO-SSD initialization deferred:', err);
+        });
+    }
+
+    // DOM Elements
+    const timerEl = document.getElementById('timer');
+    const codeEl = document.getElementById('code');
+    const inputDataEl = document.getElementById('inputData');
+    const outputEl = document.getElementById('output');
+    const runCustomBtn = document.getElementById('runCustomBtn');
+    const runTcBtn = document.getElementById('runTcBtn');
+    const runStatusMsg = document.getElementById('runStatusMsg');
+    const strikeBadge = document.getElementById('strikeBadge');
+
+    // Proctor Elements
+    const proctorVideo = document.getElementById('proctorVideo');
+    const proctorHudCanvas = document.getElementById('proctorHudCanvas');
+    const proctorOffscreen = document.getElementById('proctorOffscreen');
+    const multiFaceText = document.getElementById('multiFaceText');
+    const multiFacePill = document.getElementById('multiFacePill');
+    const mobileDetectText = document.getElementById('mobileDetectText');
+    const mobileDetectPill = document.getElementById('mobileDetectPill');
+    const gazeText = document.getElementById('gazeText');
+    const gazePill = document.getElementById('gazePill');
+    const cameraText = document.getElementById('cameraText');
+    const cameraPill = document.getElementById('cameraPill');
+
+    // Audio Alert Sound
+    function playSecurityBeep() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(800, ctx.currentTime);
+            osc.frequency.setValueAtTime(400, ctx.currentTime + 0.12);
+            osc.frequency.setValueAtTime(800, ctx.currentTime + 0.25);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.4);
+        } catch(e) {}
+    }
+
+    // ============================================================
+    // 1. COUNTDOWN TIMER
+    // ============================================================
+    function formatTime(sec) {
+        sec = Math.max(0, sec);
+        const m = Math.floor(sec / 60).toString().padStart(2, '0');
+        const s = (sec % 60).toString().padStart(2, '0');
+        return m + ':' + s;
+    }
+
+    function updateTimer() {
+        if (isTerminated) return;
+        timerEl.textContent = formatTime(remainingSeconds);
+        if (remainingSeconds <= 300) timerEl.classList.add('danger');
+        if (remainingSeconds <= 0) {
+            clearInterval(timerInterval);
+            isLeaving = true;
+            alert('Coding examination time has expired! Auto-submitting solutions.');
+            finishExamination();
+            return;
+        }
+        remainingSeconds--;
+    }
+    updateTimer();
+    const timerInterval = setInterval(updateTimer, 1000);
+
+    // ============================================================
+    // 2. CONSOLE TABS SWITCHER
+    // ============================================================
+    window.switchConsoleTab = function(tabName) {
+        const btnCustom = document.getElementById('tabBtnCustom');
+        const btnTc = document.getElementById('tabBtnTestcases');
+        const contentCustom = document.getElementById('tabContentCustom');
+        const contentTc = document.getElementById('tabContentTestcases');
+
+        if (tabName === 'custom') {
+            btnCustom.classList.add('active');
+            btnTc.classList.remove('active');
+            contentCustom.style.display = 'grid';
+            contentTc.style.display = 'none';
+        } else {
+            btnCustom.classList.remove('active');
+            btnTc.classList.add('active');
+            contentCustom.style.display = 'none';
+            contentTc.style.display = 'block';
+        }
+    };
+
+    // Tab indentation handling in code editor
+    codeEl.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab') {
+            e.preventDefault();
+            const start = this.selectionStart;
+            const end = this.selectionEnd;
+            this.value = this.value.substring(0, start) + '    ' + this.value.substring(end);
+            this.selectionStart = this.selectionEnd = start + 4;
+        }
+    });
+
+    // ============================================================
+    // 3. CODE EXECUTION (CUSTOM INPUT)
+    // ============================================================
+    window.runCustomInput = async function() {
+        if (isTerminated) return;
+        switchConsoleTab('custom');
+        runCustomBtn.disabled = true;
+        runStatusMsg.textContent = 'Compiling & Running...';
+        outputEl.textContent = 'Executing solution against stdin...';
+
+        const form = new URLSearchParams();
+        form.set('code', codeEl.value);
+        form.set('input_data', inputDataEl.value);
+        form.set('question_id', questionId);
+
+        try {
+            const resp = await fetch(runUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: form.toString()
+            });
+            const data = await resp.json();
+            if (data.expired) {
+                isLeaving = true;
+                finishExamination();
+                return;
+            }
+            outputEl.textContent = (data.output || '') + (data.error ? '\n' + data.error : '');
+            runStatusMsg.textContent = data.success ? 'Execution Successful (Exit Code 0)' : 'Execution error or compilation failure.';
+            runStatusMsg.style.color = data.success ? '#059669' : '#dc2626';
+        } catch(e) {
+            outputEl.textContent = 'Network or compilation server error. Please try again.';
+            runStatusMsg.textContent = 'Error contacting execution engine.';
+            runStatusMsg.style.color = '#dc2626';
+        } finally {
+            runCustomBtn.disabled = false;
+        }
+    };
+
+    // ============================================================
+    // 4. AUTOMATED TEST CASES EXECUTION
+    // ============================================================
+    window.runAllTestCases = async function() {
+        if (isTerminated) return;
+        switchConsoleTab('testcases');
+        runTcBtn.disabled = true;
+        runStatusMsg.textContent = 'Evaluating test cases...';
+        const tcList = document.getElementById('tcList');
+        const tcScoreBadge = document.getElementById('tcScoreBadge');
+        const tcSub = document.getElementById('tcSummarySubtitle');
+        tcList.innerHTML = '<div style="padding: 20px; text-align: center; color: #0284c7;">Running code against all sample & hidden test cases...</div>';
+
+        const form = new URLSearchParams();
+        form.set('code', codeEl.value);
+        form.set('question_id', questionId);
+
+        try {
+            const resp = await fetch(runTcUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: form.toString()
+            });
+            const data = await resp.json();
+
+            if (!data.success && data.validation_error) {
+                tcScoreBadge.style.display = 'inline-block';
+                tcScoreBadge.className = 'ct-tc-badge fail';
+                tcScoreBadge.textContent = 'SYNTAX / VALIDATION ERROR';
+                tcSub.textContent = data.validation_error;
+                tcList.innerHTML = `<div style="padding: 16px; color: #dc2626; background: #fee2e2; border-radius: 8px;"><strong>Error:</strong> ${data.validation_error}</div>`;
+                runStatusMsg.textContent = 'Validation failed.';
+                runStatusMsg.style.color = '#dc2626';
+                return;
+            }
+
+            tcScoreBadge.style.display = 'inline-block';
+            if (data.all_passed) {
+                tcScoreBadge.className = 'ct-tc-badge pass';
+                tcScoreBadge.textContent = 'ALL TEST CASES PASSED (' + data.passed_count + '/' + data.total + ')';
+                tcSub.textContent = '100% Correct Solution! Ready for final submission.';
+                runStatusMsg.textContent = 'All Test Cases Passed!';
+                runStatusMsg.style.color = '#059669';
+            } else {
+                tcScoreBadge.className = 'ct-tc-badge fail';
+                tcScoreBadge.textContent = data.passed_count + ' / ' + data.total + ' TEST CASES PASSED';
+                tcSub.textContent = 'Some test cases failed. Please review outputs and edge cases.';
+                runStatusMsg.textContent = (data.total - data.passed_count) + ' Test Case(s) Failed.';
+                runStatusMsg.style.color = '#dc2626';
+            }
+
+            let html = '';
+            (data.test_cases || []).forEach(tc => {
+                const isPass = tc.passed;
+                html += `
+                    <div class="ct-tc-card ${isPass ? 'pass' : 'fail'}">
+                        <div class="ct-tc-header">
+                            <span>Test Case ${tc.test_case}</span>
+                            <span style="color: ${isPass ? '#16a34a' : '#dc2626'};">
+                                ${isPass ? '✓ PASS' : '✗ FAIL'}
+                            </span>
+                        </div>
+                        <div class="ct-tc-details">
+                            <div><strong>Input:</strong> ${escapeHtml(tc.input || '(empty)')}</div>
+                            <div><strong>Expected:</strong> ${escapeHtml(tc.expected || '(empty)')}</div>
+                            <div><strong>Output:</strong> ${escapeHtml(tc.actual || tc.error || '(no output)')}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            tcList.innerHTML = html;
+
+        } catch(e) {
+            tcList.innerHTML = '<div style="padding: 16px; color: #dc2626;">Execution server error. Please retry.</div>';
+            runStatusMsg.textContent = 'Test case evaluation failed.';
+        } finally {
+            runTcBtn.disabled = false;
+        }
+    };
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // ============================================================
+    // 5. PROBLEM SWITCHING & FINAL SUBMISSION
+    // ============================================================
+    window.switchProblem = function(targetNumber) {
+        if (isTerminated || targetNumber === currentQNum) return;
+        isLeaving = true;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = actionUrl;
+
+        const act = document.createElement('input'); act.type = 'hidden'; act.name = 'action'; act.value = 'jump'; form.appendChild(act);
+        const tgt = document.createElement('input'); tgt.type = 'hidden'; tgt.name = 'target_number'; tgt.value = targetNumber; form.appendChild(tgt);
+        const c = document.createElement('input'); c.type = 'hidden'; c.name = 'code'; c.value = codeEl.value; form.appendChild(c);
+        const inp = document.createElement('input'); inp.type = 'hidden'; inp.name = 'input_data'; inp.value = inputDataEl.value; form.appendChild(inp);
+
+        document.body.appendChild(form);
+        form.submit();
+    };
+
+    window.finishExamination = function() {
+        if (isTerminated) return;
+        if (!confirm('Submit the programming examination now?\n\nOnce submitted, all coding questions will be permanently evaluated against hidden test cases and internal assessment records will be closed.')) {
+            return;
+        }
+        isLeaving = true;
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = actionUrl;
+
+        const act = document.createElement('input'); act.type = 'hidden'; act.name = 'action'; act.value = 'finish'; form.appendChild(act);
+        const c = document.createElement('input'); c.type = 'hidden'; c.name = 'code'; c.value = codeEl.value; form.appendChild(c);
+        const inp = document.createElement('input'); inp.type = 'hidden'; inp.name = 'input_data'; inp.value = inputDataEl.value; form.appendChild(inp);
+
+        document.body.appendChild(form);
+        form.submit();
+    };
+
+    // ============================================================
+    // 6. REAL-TIME AI PROCTORING ENGINE (MULTI-FACE, MOBILE, GAZE)
+    // ============================================================
+    let streamActive = false;
+    let consecutiveDark = 0;
+    let consecutiveLookingAway = 0;
+    let consecutiveMobileFrames = 0;
+    let nativeFaceDetector = null;
+
+    if ('FaceDetector' in window) {
+        try { nativeFaceDetector = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 5 }); } catch(e) {}
+    }
+
+    async function initCamera() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 320 }, height: { ideal: 240 } },
+                audio: true
+            });
+            proctorVideo.srcObject = stream;
+            streamActive = true;
+            cameraText.textContent = 'Active';
+            cameraText.style.color = '#4ade80';
+        } catch(err) {
+            cameraText.textContent = 'Blocked';
+            cameraText.style.color = '#ef4444';
+            cameraPill.classList.add('alert');
+            recordProctorViolation('camerablock', 'Webcam access denied or unavailable.');
+        }
+    }
+    initCamera();
+
+    async function checkProctorFrame() {
+        if (!streamActive || isTerminated || proctorVideo.videoWidth === 0) return;
+
+        const W = 160;
+        const H = 120;
+        const ctxOff = proctorOffscreen.getContext('2d');
+        ctxOff.drawImage(proctorVideo, 0, 0, W, H);
+        const imgData = ctxOff.getImageData(0, 0, W, H);
+        const pixels = imgData.data;
+
+        // Setup HUD canvas
+        proctorHudCanvas.width = proctorVideo.videoWidth || 320;
+        proctorHudCanvas.height = proctorVideo.videoHeight || 240;
+        const hud = proctorHudCanvas.getContext('2d');
+        hud.clearRect(0, 0, proctorHudCanvas.width, proctorHudCanvas.height);
+        const scaleX = proctorHudCanvas.width / W;
+        const scaleY = proctorHudCanvas.height / H;
+
+        // 1. Camera Block
+        let totalLum = 0;
+        const total = W * H;
+        for (let i = 0; i < pixels.length; i += 4) {
+            totalLum += (0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2]);
+        }
+        const meanLum = totalLum / total;
+        if (meanLum < 12) {
+            consecutiveDark++;
+            if (consecutiveDark >= 3) {
+                cameraText.textContent = 'BLOCKED!';
+                cameraText.style.color = '#ef4444';
+                cameraPill.classList.add('alert');
+                recordProctorViolation('camerablock', 'Webcam lens obstructed or covered.');
+                consecutiveDark = 0;
+            }
+        } else {
+            consecutiveDark = 0;
+            cameraText.textContent = 'Active';
+            cameraText.style.color = '#4ade80';
+            cameraPill.classList.remove('alert');
+        }
+
+        // 2. Multi-Face & Head Turn (Gaze)
+        let facesDetected = [];
+        if (nativeFaceDetector) {
+            try { facesDetected = await nativeFaceDetector.detect(proctorVideo); } catch(e) {}
+        }
+
+        if (facesDetected && facesDetected.length > 0) {
+            facesDetected.forEach((face, idx) => {
+                const b = face.boundingBox;
+                hud.lineWidth = 2;
+                hud.strokeStyle = facesDetected.length > 1 ? '#ef4444' : '#22c55e';
+                hud.strokeRect(b.left, b.top, b.width, b.height);
+
+                hud.fillStyle = facesDetected.length > 1 ? '#ef4444' : '#22c55e';
+                hud.font = '11px sans-serif';
+                hud.fillText(facesDetected.length > 1 ? `🚨 Face #${idx + 1}` : '✓ Verified Candidate', b.left + 4, b.top - 6);
+            });
+
+            if (facesDetected.length >= 2) {
+                multiFaceText.textContent = `${facesDetected.length} FACES!`;
+                multiFaceText.style.color = '#ef4444';
+                multiFacePill.classList.add('alert');
+                recordProctorViolation('multiface', `Multiple faces (${facesDetected.length}) detected in camera view.`);
+            } else {
+                multiFaceText.textContent = '1 Verified';
+                multiFaceText.style.color = '#4ade80';
+                multiFacePill.classList.remove('alert');
+
+                // Head turn / looking away
+                const f = facesDetected[0].boundingBox;
+                const vW = proctorHudCanvas.width;
+                const vH = proctorHudCanvas.height;
+                const centerX = (f.left + f.width / 2) / vW;
+                const centerY = (f.top + f.height / 2) / vH;
+                const ratio = f.width / f.height;
+
+                const isLookingAway = (centerX < 0.20 || centerX > 0.80 || centerY > 0.78 || ratio < 0.52);
+                if (isLookingAway) {
+                    consecutiveLookingAway++;
+                    gazeText.textContent = 'LOOKING AWAY!';
+                    gazeText.style.color = '#f59e0b';
+                    gazePill.classList.add('alert');
+
+                    hud.strokeStyle = '#f59e0b';
+                    hud.lineWidth = 3;
+                    hud.strokeRect(f.left, f.top, f.width, f.height);
+                    hud.fillStyle = '#f59e0b';
+                    hud.fillText('⚠️ LOOKING AWAY / HEAD TURNED', f.left, f.top + f.height + 14);
+
+                    if (consecutiveLookingAway >= 4) {
+                        recordProctorViolation('looking_away', 'Candidate looking away or turned head from coding IDE.');
+                        consecutiveLookingAway = 0;
+                    }
+                } else {
+                    consecutiveLookingAway = 0;
+                    gazeText.textContent = 'Focused';
+                    gazeText.style.color = '#4ade80';
+                    gazePill.classList.remove('alert');
+                }
+            }
+        } else {
+            // Contour skin clustering fallback
+            let skinPoints = [];
+            for (let y = 0; y < H; y++) {
+                for (let x = 0; x < W; x++) {
+                    const idx = (y * W + x) * 4;
+                    const r = pixels[idx], g = pixels[idx+1], b = pixels[idx+2];
+                    if (r > 95 && g > 45 && b > 25 && (r - g) > 12 && r > b) skinPoints.push({ x, y });
+                }
+            }
+
+            if (skinPoints.length > 250) {
+                let leftFaces = skinPoints.filter(p => p.x < W * 0.45).length;
+                let rightFaces = skinPoints.filter(p => p.x > W * 0.55).length;
+                if (leftFaces > 300 && rightFaces > 300) {
+                    multiFaceText.textContent = 'MULTI-FACE!';
+                    multiFaceText.style.color = '#ef4444';
+                    multiFacePill.classList.add('alert');
+                    recordProctorViolation('multiface', 'Multiple individuals detected in exam workspace.');
+                } else {
+                    multiFaceText.textContent = '1 Verified';
+                    multiFaceText.style.color = '#4ade80';
+                    multiFacePill.classList.remove('alert');
+                    gazeText.textContent = 'Focused';
+                    gazeText.style.color = '#4ade80';
+                    gazePill.classList.remove('alert');
+                }
+            }
+        }
+
+        // ==========================================
+        // SENSOR 3: NEURAL MOBILE PHONE DETECTION (COCO-SSD)
+        // ==========================================
+        // Real-time deep learning object detection for mobile phones.
+        // Replaces error-prone pixel heuristics so dark shirts, hair, and shadows never cause false strikes.
+        if (cocoModel && !isDetectingObjects && proctorVideo.readyState >= 2) {
+            isDetectingObjects = true;
+            cocoModel.detect(proctorVideo).then(predictions => {
+                const phone = predictions.find(p => (p.class === 'cell phone' || p.class === 'remote') && p.score >= 0.58);
+                if (phone) {
+                    lastPhoneDetection = {
+                        x: phone.bbox[0],
+                        y: phone.bbox[1],
+                        w: phone.bbox[2],
+                        h: phone.bbox[3],
+                        score: Math.round(phone.score * 100)
+                    };
+                    consecutiveMobileFrames++;
+                } else {
+                    consecutiveMobileFrames = Math.max(0, consecutiveMobileFrames - 1);
+                    if (consecutiveMobileFrames === 0) {
+                        lastPhoneDetection = null;
+                    }
+                }
+
+                // Deep learning multi-person detection confirmation
+                const persons = predictions.filter(p => p.class === 'person' && p.score >= 0.55);
+                if (persons.length >= 2 && (!facesDetected || facesDetected.length < 2)) {
+                    multiFaceText.textContent = `${persons.length} PERSONS!`;
+                    multiFaceText.style.color = '#ef4444';
+                    multiFacePill.classList.add('alert');
+                    recordProctorViolation('multiface', `Multi-person violation: ${persons.length} individuals in workspace!`);
+                }
+            }).catch(() => {}).finally(() => {
+                isDetectingObjects = false;
+            });
+        }
+
+        // Render phone detection state on HUD and status badges
+        if (consecutiveMobileFrames > 0 && lastPhoneDetection) {
+            mobileDetectText.textContent = 'DETECTED!';
+            mobileDetectText.style.color = '#ef4444';
+            mobileDetectPill.classList.add('alert');
+
+            // Draw HUD Phone Detection Bounding Box
+            hud.strokeStyle = '#ef4444';
+            hud.lineWidth = 3;
+            hud.strokeRect(lastPhoneDetection.x, lastPhoneDetection.y, lastPhoneDetection.w, lastPhoneDetection.h);
+            hud.fillStyle = '#ef4444';
+            hud.font = 'bold 12px sans-serif';
+            hud.fillText(`📱 MOBILE DETECTED (${lastPhoneDetection.score}%)`, lastPhoneDetection.x, Math.max(14, lastPhoneDetection.y - 6));
+
+            if (consecutiveMobileFrames >= 3) {
+                recordProctorViolation('mobiledetect', 'Mobile phone or unauthorized electronic device detected in frame!');
+                consecutiveMobileFrames = 0;
+                lastPhoneDetection = null;
+            }
+        } else {
+            mobileDetectText.textContent = isCocoModelLoaded ? 'Clear' : 'Active';
+            mobileDetectText.style.color = '#4ade80';
+            mobileDetectPill.classList.remove('alert');
+        }
+    }
+    setInterval(checkProctorFrame, 1000);
+
+    // Tab Switch / Window Blur
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden && !isLeaving && !isTerminated) {
+            recordProctorViolation('tabswitch', 'Student navigated away from coding window or minimized tab.');
+        }
+    });
+
+    window.addEventListener('blur', function() {
+        if (!isLeaving && !isTerminated) {
+            recordProctorViolation('tabswitch', 'Student switched focus away from assessment interface.');
+        }
+    });
+
+    // Anti-Cheating Key & Context Locks
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
+    document.addEventListener('cut', e => e.preventDefault());
+    document.addEventListener('paste', e => e.preventDefault());
+    document.addEventListener('keydown', function(e) {
+        const k = e.key.toLowerCase();
+        if ((e.ctrlKey || e.metaKey) && ['c','v','x','s','p','r','u'].includes(k)) e.preventDefault();
+        if (e.key === 'F5' || e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(k))) e.preventDefault();
+    });
+
+    let lastViolationTime = 0;
+    async function recordProctorViolation(type, details) {
+        if (isTerminated || isLeaving) return;
+        const now = Date.now();
+        if (now - lastViolationTime < 5000) return;
+        lastViolationTime = now;
+
+        playSecurityBeep();
+
+        try {
+            const form = new URLSearchParams({ type: type, details: details, assessment_id: assessmentId });
+            const resp = await fetch(proctorLogUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: form.toString()
+            });
+            const data = await resp.json();
+            strikes = data.strike_count || (strikes + 1);
+            if (strikeBadge) {
+                strikeBadge.textContent = strikes + ' / ' + maxStrikes + ' Strikes';
+                if (strikes > 0) strikeBadge.style.color = '#ef4444';
+            }
+
+            if (data.disqualified || strikes >= maxStrikes) {
+                isTerminated = true;
+                clearInterval(timerInterval);
+                showDisqualificationNotice(details);
+            } else {
+                showViolationModal(type, details, strikes);
+            }
+        } catch(e) {
+            strikes++;
+            if (strikeBadge) {
+                strikeBadge.textContent = strikes + ' / ' + maxStrikes + ' Strikes';
+                if (strikes > 0) strikeBadge.style.color = '#ef4444';
+            }
+            if (strikes >= maxStrikes) {
+                isTerminated = true;
+                clearInterval(timerInterval);
+                showDisqualificationNotice(details);
+            } else {
+                showViolationModal(type, details, strikes);
+            }
+        }
+    }
+
+    // Evaluator Test Simulation Helper
+    window.testTriggerViolation = function(type, desc) {
+        recordProctorViolation(type, desc);
+    };
+
+    function showViolationModal(type, details, strikeNum) {
+        const modal = document.getElementById('violationModal');
+        const desc = document.getElementById('violationDesc');
+        const strikeBox = document.getElementById('violationStrikeBox');
+        if (!modal) return;
+
+        const typeLabels = {
+            'camerablock': 'Camera Block / Obstruction Detected',
+            'multiface': 'Multiple Faces Detected in Exam Frame',
+            'mobiledetect': 'Mobile Phone / Electronic Device Detected',
+            'looking_away': 'Candidate Looking Away / Head Turned Away',
+            'tabswitch': 'Browser Tab Switch / Window Blur Detected'
+        };
+
+        document.getElementById('violationTitle').textContent = typeLabels[type] || 'Security Anomaly Detected';
+        desc.textContent = details + ' Real-time AI Proctor enforces continuous central gaze, single-candidate presence, and device restriction.';
+        strikeBox.textContent = 'Warning Strike ' + strikeNum + ' of ' + maxStrikes + ' (Disqualification on Strike 3)';
+        modal.classList.add('show');
+    }
+
+    window.dismissViolationModal = function() {
+        const modal = document.getElementById('violationModal');
+        if (modal) modal.classList.remove('show');
+    };
+
+    function showDisqualificationNotice(details) {
+        document.body.innerHTML = `
+            <div style="max-width: 600px; margin: 100px auto; padding: 40px; background: #ffffff; border-radius: 16px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+                <div style="font-size: 54px; margin-bottom: 12px;">🚫</div>
+                <h1 style="color: #dc2626; font-size: 24px; margin-bottom: 8px;">Practical Lab Disqualified</h1>
+                <p style="color: #475569; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+                    Your assessment has been automatically terminated due to exceeding the maximum security infraction limit (3/3 strikes).
+                </p>
+                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px; text-align: left; font-size: 13px; color: #991b1b; margin-bottom: 24px;">
+                    <strong>Violation Details:</strong> ${details}<br>
+                    <strong>Timestamp:</strong> ${new Date().toLocaleString()}<br>
+                    <strong>Institutional Status:</strong> Disqualified by CodeTech AI Proctor (MIT Meerut / AKTU)
+                </div>
+                <a href="${loginUrl}" style="display: inline-block; background: #0f172a; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 700;">
+                    Return to ERP Login
+                </a>
+            </div>
+        `;
+    }
+
+})();
+</script>
+{% endblock %}

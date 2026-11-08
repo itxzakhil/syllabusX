@@ -1,0 +1,186 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment Instructions — SyllabusX{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- Main Assessment Card -->
+    <div class="assessment-card">
+
+        <!-- Header -->
+        <div class="assessment-header">
+
+            <div>
+                <h1>Assessment Instructions</h1>
+                <p>
+                    Please read the following instructions carefully
+                    before starting your assessment.
+                </p>
+            </div>
+
+        </div>
+
+
+        <!-- Assessment Structure -->
+        <h2>Assessment Structure</h2>
+
+        <div class="instruction-list">
+
+            <!-- 1 -->
+            <div class="instruction-item">
+
+                <div class="instruction-number">1</div>
+
+                <div>
+                    <h3>Course Selection</h3>
+                    <p>
+                        Select the course for which you want to take
+                        the assessment.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- 2 -->
+            <div class="instruction-item">
+
+                <div class="instruction-number">2</div>
+
+                <div>
+                    <h3>MCQ Assessment</h3>
+                    <p>
+                        You will receive 20 multiple-choice questions.
+                        The questions will be shuffled for each student.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- 3 -->
+            <div class="instruction-item">
+
+                <div class="instruction-number">3</div>
+
+                <div>
+                    <h3>MCQ Time Limit</h3>
+                    <p>
+                        You will have 20 minutes to complete the MCQ
+                        section.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- 4 -->
+            <div class="instruction-item">
+
+                <div class="instruction-number">4</div>
+
+                <div>
+                    <h3>Coding Assessment</h3>
+                    <p>
+                        After completing the MCQ section, you will move
+                        to the coding section.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- 5 -->
+            <div class="instruction-item">
+
+                <div class="instruction-number">5</div>
+
+                <div>
+                    <h3>Coding Questions</h3>
+                    <p>
+                        The coding section will contain 3 programming
+                        questions.
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- 6 -->
+            <div class="instruction-item">
+
+                <div class="instruction-number">6</div>
+
+                <div>
+                    <h3>Coding Time Limit</h3>
+                    <p>
+                        You will have a total of 60 minutes for the
+                        coding section.
+                    </p>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Important Notice -->
+        <div class="notice-card">
+
+            <h3>⚠ Important</h3>
+
+            <ul>
+
+                <li>
+                    Make sure you have a stable internet connection.
+                </li>
+
+                <li>
+                    Do not refresh the browser during the assessment.
+                </li>
+
+                <li>
+                    Do not close the browser window while taking
+                    the assessment.
+                </li>
+
+                <li>
+                    Read each question carefully before answering.
+                </li>
+
+                <li>
+                    Your assessment activity will be recorded.
+                </li>
+
+                <li>
+                    Your results will be saved in the college
+                    assessment system.
+                </li>
+
+            </ul>
+
+        </div>
+
+
+        <!-- Buttons -->
+        <div class="assessment-action">
+
+            <a href="{{ url_for('course_selection') }}"
+               class="btn btn-primary">
+                Continue to Course Selection →
+            </a>
+
+            <a href="{{ url_for('student_dashboard') }}"
+               class="btn btn-secondary">
+                Back to Dashboard
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

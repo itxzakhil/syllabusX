@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="thank-you-page">
+
+    <div class="thank-you-card">
+
+        <div class="thank-you-icon">
+            ✓
+        </div>
+
+        <h1>Assessment Submitted</h1>
+
+        <p class="thank-you-main">
+            Thank you for completing the assessment.
+        </p>
+
+        <p>
+            Your assessment has been submitted successfully.
+        </p>
+
+        <p>
+            Your results have been recorded and sent to the
+            college teacher/admin for evaluation.
+        </p>
+
+        <p class="private-result-message">
+            Your score is not displayed to students.
+        </p>
+
+        <div class="redirect-message">
+            Redirecting to login...
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+setTimeout(
+    function() {
+
+        window.location.href =
+            "{{ url_for('login') }}";
+
+    },
+    5000
+);
+
+</script>
+
+{% endblock %}

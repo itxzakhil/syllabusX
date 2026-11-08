@@ -1,0 +1,27 @@
+# Environment variables (contains sensitive secrets, passwords, tokens)
+.env
+.env*.local
+
+# Virtual Environment
+venv/
+env/
+ENV/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Local uploads and temporary databases
+database/*.db
+database/*.db-journal
+database/*.db-wal
+database/*.db-shm
+static/uploads/*
+!static/uploads/.gitkeep
+
+# IDE & Editor
+.vscode/
+.idea/
+*.swp
+*.swo

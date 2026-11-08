@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Campus Notices — SyllabusX{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="dashboard-header">
+        <div>
+            <span class="portal-badge" style="background:#0f172a;color:#fff;">OFFICE OF THE DEAN</span>
+            <h1 style="margin-top:10px;">Campus circulars &amp; notices</h1>
+            <p>Official academic, examination, and placement communication for MIT Meerut.</p>
+        </div>
+    </div>
+
+    {% if can_post %}
+    <div class="notice-composer">
+        <h3 style="margin-bottom:12px;">Publish a circular</h3>
+        <form method="POST">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-bottom:12px;">
+                <div>
+                    <label style="font-size:12px;font-weight:700;">Title</label>
+                    <input name="title" required style="width:100%;padding:9px 12px;border:1.5px solid #cbd5e1;border-radius:8px;">
+                </div>
+                <div>
+                    <label style="font-size:12px;font-weight:700;">Category</label>
+                    <select name="category" style="width:100%;padding:9px 12px;border:1.5px solid #cbd5e1;border-radius:8px;">
+                        <option>Academic</option>
+                        <option>Examination</option>
+                        <option>Placement</option>
+                        <option>Faculty</option>
+                        <option>Campus</option>
+                    </select>
+                </div>
+                <div>
+                    <label style="font-size:12px;font-weight:700;">Audience</label>
+                    <select name="audience" style="width:100%;padding:9px 12px;border:1.5px solid #cbd5e1;border-radius:8px;">
+                        <option value="all">Entire campus</option>
+                        <option value="student">Students</option>
+                        <option value="faculty">Faculty</option>
+                    </select>
+                </div>
+            </div>
+            <label style="font-size:12px;font-weight:700;">Message</label>
+            <textarea name="body" required rows="3" style="width:100%;padding:9px 12px;border:1.5px solid #cbd5e1;border-radius:8px;margin:6px 0 12px;"></textarea>
+            <label style="font-size:13px;font-weight:700;display:flex;gap:8px;align-items:center;margin-bottom:12px;">
+                <input type="checkbox" name="is_pinned" value="1"> Pin to top of notice board
+            </label>
+            <button class="btn btn-primary" type="submit">Publish circular</button>
+        </form>
+    </div>
+    {% endif %}
+
+    <div class="notice-grid">
+        {% for n in notices %}
+        <article class="notice-tile">
+            <span class="cat-chip {{ n.category|lower }}">{{ n.category }}</span>
+            {% if n.is_pinned %}<span class="cat-chip exam">Pinned</span>{% endif %}
+            <h3>{{ n.title }}</h3>
+            <p>{{ n.body }}</p>
+            <small style="color:#64748b;font-weight:700;">{{ n.posted_by }} · {{ n.created_at }}</small>
+        </article>
+        {% else %}
+        <p>No circulars are visible for your role yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

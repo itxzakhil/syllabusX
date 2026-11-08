@@ -1,0 +1,701 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Dashboard — SyllabusX{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- =====================================================
+         X-ERP INSTITUTIONAL BANNER
+         ===================================================== -->
+    <div class="college-badge-banner">
+        <div class="college-crest-icon">🏛️</div>
+        <div class="college-info">
+            <h2>Meerut Institute of Technology, Meerut</h2>
+            <p>Faculty Academic Workstation • Department of Computer Science &amp; Engineering</p>
+            <span class="college-tagline">Academic Session 2026-27 | Teaching Workload, Attendance &amp; Lab Examination Management</span>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         FACULTY WELCOME & QUICK ACTIONS
+         ===================================================== -->
+    <div class="dashboard-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="portal-badge" style="background: #1e3a8a; color: white;">FACULTY WORKSTATION</span>
+                <span class="status-badge status-active">Active Teaching Faculty</span>
+            </div>
+            <h1>Welcome, {{ faculty["name"] if faculty else session.get("faculty_name", "Faculty Member") }}</h1>
+            <p>
+                <strong>{{ faculty["designation"] if faculty else "Associate Professor" }}</strong> — 
+                {{ faculty["department"] if faculty else "Computer Science & Engineering" }} | 
+                Email: {{ faculty["email"] if faculty else session.get("faculty_email", "") }}
+            </p>
+        </div>
+
+        <div class="header-action-buttons">
+            <button type="button" class="btn btn-primary" onclick="toggleStudentRegisterDrawer()" style="background: #0284c7; font-weight: 700; border: none; padding: 10px 18px; border-radius: 6px; cursor: pointer; color: white;">
+                ➕ Register New Student
+            </button>
+            <a href="{{ url_for('admin_attendance') }}" class="btn btn-primary" style="background: #1e3a8a; font-weight: 700;">
+                📝 Mark Lecture Attendance →
+            </a>
+            <a href="{{ url_for('admin_attendance_records') }}" class="btn btn-secondary">
+                📋 Attendance Muster Roll
+            </a>
+            <button type="button" onclick="toggleFacultyPasswordModal()" class="btn btn-secondary" style="font-weight: 700;">
+                🔑 Change Password
+            </button>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         AUTHORIZED FACULTY STUDENT REGISTRATION DRAWER
+         ===================================================== -->
+    <div id="studentRegisterDrawer" style="display: none; background: #ffffff; border: 2px solid #0284c7; border-radius: 12px; padding: 22px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(2, 132, 199, 0.12);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1.5px solid #e0f2fe; padding-bottom: 12px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span style="font-size: 24px;">🎓</span>
+                <div>
+                    <h3 style="margin: 0; color: #0369a1; font-size: 17px; font-weight: 800;">
+                        Authorized Student Registration &amp; Profile Photo Enrollment
+                    </h3>
+                    <p style="margin: 2px 0 0 0; font-size: 12px; color: #64748b;">
+                        Faculty Workstation Portal • Direct Institutional Student Enrollment &amp; UIDAI Aadhaar Binding
+                    </p>
+                </div>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <a href="{{ url_for('faculty_register_student') }}" class="btn btn-secondary" style="font-size: 12px; padding: 6px 12px;">
+                    Open Full Page ↗
+                </a>
+                <button type="button" onclick="toggleStudentRegisterDrawer()" style="border: none; background: #f1f5f9; color: #475569; font-size: 13px; font-weight: 700; padding: 6px 12px; border-radius: 6px; cursor: pointer;">
+                    ✕ Close
+                </button>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('faculty_register_student') }}" enctype="multipart/form-data" id="facultyRegDrawerForm">
+            <!-- 2-Column Info Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 14px;">
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Student Full Name *</label>
+                    <input type="text" name="name" placeholder="e.g. Rahul Sharma" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">University Roll Number *</label>
+                    <input type="text" name="roll_number" placeholder="e.g. 210282010045" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">College Email ID *</label>
+                    <input type="email" name="email" placeholder="e.g. rahul.sharma@college.edu" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Student Mobile Number (+91 SIM) *</label>
+                    <input type="tel" name="mobile_number" placeholder="e.g. 9876543210" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">12-Digit UIDAI Aadhaar UID *</label>
+                    <input type="text" name="aadhar_number" placeholder="XXXX-XXXX-XXXX (e.g. 5432-8765-9012)" maxlength="14" oninput="formatAadharInput(this)" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-weight: 600; box-sizing: border-box;">
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Initial Password (optional)</label>
+                    <input type="password" name="password" placeholder="Leave blank for system default" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;" autocomplete="new-password">
+                </div>
+            </div>
+
+            <!-- Aadhaar File Upload -->
+            <div style="background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 8px; padding: 12px; margin-bottom: 14px;">
+                <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Attach Aadhaar Card Document / PDF (Optional)</label>
+                <input type="file" name="aadhar_card_file" accept=".pdf,image/jpeg,image/png,image/webp" style="font-size: 12px;">
+                <small style="display: block; color: #64748b; font-size: 11px; margin-top: 2px;">Upload scanned e-Aadhaar or identity proof (Max 16 MB).</small>
+            </div>
+
+            <!-- Student Profile Photo Upload Block -->
+            <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%); border: 1.5px solid #86efac; border-radius: 10px; padding: 14px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <span style="font-size: 12px; font-weight: 800; color: #166534; text-transform: uppercase; display: flex; align-items: center; gap: 6px;">
+                        <span>📸</span> Student Profile / Passport Photo *
+                    </span>
+                    <span style="font-size: 11px; font-weight: 800; background: #0284c7; color: white; padding: 2px 8px; border-radius: 4px;">
+                        DASHBOARD AVATAR
+                    </span>
+                </div>
+                <p style="font-size: 12px; color: #475569; margin: 0 0 10px 0; line-height: 1.4;">
+                    Capture student's photo via webcam or upload passport photo. This photo will appear on the Student SIS Portal and Faculty Roster.
+                </p>
+
+                <div style="display: flex; gap: 10px; margin-bottom: 10px;">
+                    <button type="button" onclick="startFacCam()" style="background: #0284c7; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer;">
+                        📷 Open Camera &amp; Snap Photo
+                    </button>
+                    <label for="facFaceFile" style="background: white; border: 1.5px solid #cbd5e1; padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; color: #334155; margin: 0;">
+                        📁 Upload Passport Photo
+                    </label>
+                    <input type="file" id="facFaceFile" name="student_photo" accept="image/jpeg,image/png,image/webp" style="display: none;" onchange="handleFacFileUpload(event)">
+                </div>
+
+                <!-- Video Viewport -->
+                <div id="facCamBox" style="display: none; position: relative; width: 100%; aspect-ratio: 4/3; max-height: 240px; background: #0b1329; border-radius: 8px; overflow: hidden; margin-bottom: 10px; border: 2px solid #38bdf8;">
+                    <video id="facVideo" autoplay playsinline muted style="width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1);"></video>
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 130px; height: 160px; border: 2px dashed #22c55e; border-radius: 50%; pointer-events: none; box-shadow: 0 0 15px rgba(34, 197, 94, 0.4);"></div>
+                    <div style="position: absolute; bottom: 8px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px;">
+                        <button type="button" onclick="captureFacFace()" style="background: #22c55e; color: #052e16; border: none; font-weight: 800; font-size: 12px; padding: 7px 16px; border-radius: 20px; cursor: pointer;">
+                            📸 Capture Photo
+                        </button>
+                        <button type="button" onclick="stopFacCam()" style="background: rgba(239, 68, 68, 0.9); color: white; border: none; font-weight: 700; font-size: 12px; padding: 7px 12px; border-radius: 20px; cursor: pointer;">
+                            ✕ Cancel
+                        </button>
+                    </div>
+                </div>
+                <canvas id="facCanvas" style="display: none;"></canvas>
+
+                <!-- Preview Box -->
+                <div id="facPreviewBox" style="display: none; background: white; border: 1.5px solid #86efac; border-radius: 8px; padding: 10px; margin-bottom: 8px;">
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <img id="facPreviewImg" src="" alt="Student Photo" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; border: 2px solid #22c55e;">
+                        <div style="flex: 1;">
+                            <div id="facBadge" style="display: inline-block; font-size: 11px; font-weight: 800; padding: 2px 8px; border-radius: 4px; margin-bottom: 3px; background: #dcfce7; color: #15803d;">
+                                ● Photo Ready
+                            </div>
+                            <div id="facStatusMsg" style="font-size: 12px; color: #166534; font-weight: 600;">Student photo attached.</div>
+                            <button type="button" onclick="retakeFacFace()" style="margin-top: 4px; background: none; border: none; color: #0284c7; font-size: 11px; font-weight: 700; cursor: pointer; text-decoration: underline; padding: 0;">
+                                🔄 Retake Photo
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <input type="hidden" id="fac_face_image_data" name="face_image_data" value="">
+            </div>
+
+            <!-- Submit Buttons -->
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="toggleStudentRegisterDrawer()" class="btn btn-secondary" style="font-weight: 700;">
+                    Cancel
+                </button>
+                <button type="submit" class="btn btn-primary" style="background: #0284c7; font-weight: 800; padding: 10px 24px; font-size: 14px; border: none;">
+                    ✓ Register &amp; Enroll Student Directly →
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- =====================================================
+         FACULTY KPI STATS
+         ===================================================== -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-title">Enrolled Students in Batch</div>
+            <div class="stat-number">{{ students|length }}</div>
+            <div class="stat-description">Active in academic roster</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Lectures Recorded</div>
+            <div class="stat-number">{{ attendance_stats.total_sessions if attendance_stats else 10 }}</div>
+            <div class="stat-description">Total classes in muster roll</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Class Attendance Average</div>
+            <div class="stat-number text-green">{{ attendance_stats.average_attendance if attendance_stats else 82.5 }}%</div>
+            <div class="stat-description">Batch compliance rate</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Attendance Shortage Alert</div>
+            <div class="stat-number text-red">{{ attendance_stats.shortage_count if attendance_stats else 2 }}</div>
+            <div class="stat-description">Students below 75% limit</div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         DEDICATED SECTION: MARK STUDENT ATTENDANCE MODULE
+         ===================================================== -->
+    <div class="dashboard-card" style="border-top: 4px solid #1e3a8a; background: #ffffff;">
+        <div class="card-header" style="flex-wrap: wrap; gap: 12px;">
+            <div>
+                <h2 style="display: flex; align-items: center; gap: 8px;">
+                    📝 Mark Daily Lecture Attendance (Batch Register)
+                    <span class="portal-badge" style="background: #eff6ff; color: #1e3a8a; font-size: 11px;">Muster Roll Portal</span>
+                </h2>
+                <p>Record presence, absence, and syllabus lecture topic for enrolled students</p>
+            </div>
+            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="btn btn-secondary" onclick="markAllPresentQuick()" style="font-weight: 700; color: #16a34a; border-color: #bbf7d0; background: #f0fdf4;">
+                    ✓ Mark All Present
+                </button>
+                <a href="{{ url_for('admin_attendance') }}" class="btn btn-primary" style="background: #1e3a8a; font-weight: 700;">
+                    Open Full Attendance Register →
+                </a>
+            </div>
+        </div>
+
+        <form method="POST" action="{{ url_for('admin_attendance') }}" id="quickAttendanceForm">
+            <!-- Controls Grid -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px; margin-bottom: 16px;">
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Subject Course *</label>
+                    <select name="course_id" required style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                        {% for course in courses %}
+                        <option value="{{ course['id'] }}">{{ course["name"] }} ({{ course["code"] }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Attendance Date *</label>
+                    <input type="date" name="attendance_date" id="quickAttendanceDate" required style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                </div>
+                <div style="grid-column: span 1;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Curriculum / Lecture Topic</label>
+                    <input type="text" name="topic" placeholder="e.g. Dynamic Memory Allocation & Pointers" value="Unit Evaluation & Programming Practical" style="width: 100%; padding: 8px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                </div>
+            </div>
+
+            <!-- Student Quick Roll Marking Table -->
+            <div class="table-wrapper" style="max-height: 380px; overflow-y: auto;">
+                <table class="student-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 50px;">#</th>
+                            <th style="width: 60px;">Photo</th>
+                            <th>Roll Number</th>
+                            <th>Student Name</th>
+                            <th>Current %</th>
+                            <th>Attendance Marking</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>
+                                {% if student['face_photo'] %}
+                                    <img src="{{ url_for('static', filename='uploads/face_profiles/' + student['face_photo']) }}" 
+                                         alt="{{ student['name'] }}" 
+                                         style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; border: 1.5px solid #0284c7; vertical-align: middle;"
+                                         onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ student.name | urlencode }}&background=0284c7&color=fff&size=68';">
+                                {% else %}
+                                    <div style="width: 34px; height: 34px; border-radius: 50%; background: #e0f2fe; color: #0284c7; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; vertical-align: middle;">
+                                        {{ student['name'][:1]|upper }}
+                                    </div>
+                                {% endif %}
+                            </td>
+                            <td><strong>{{ student["roll_number"] }}</strong></td>
+                            <td>{{ student["name"] }}</td>
+                            <td>
+                                <span style="font-weight: 700; color: {% if student['attendance_summary'] and student['attendance_summary']['percentage'] >= 75 %}#16a34a{% else %}#dc2626{% endif %};">
+                                    {{ student["attendance_summary"]["percentage"] if student["attendance_summary"] else 0 }}%
+                                </span>
+                            </td>
+                            <td>
+                                <div style="display: flex; gap: 16px; align-items: center;">
+                                    <label style="display: flex; align-items: center; gap: 4px; font-weight: 700; color: #16a34a; cursor: pointer; font-size: 13px;">
+                                        <input type="radio" name="status_{{ student['id'] }}" value="Present" class="quick-status-radio quick-status-present" checked>
+                                        Present
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 4px; font-weight: 700; color: #dc2626; cursor: pointer; font-size: 13px;">
+                                        <input type="radio" name="status_{{ student['id'] }}" value="Absent" class="quick-status-radio">
+                                        Absent
+                                    </label>
+                                    <label style="display: flex; align-items: center; gap: 4px; font-weight: 600; color: #d97706; cursor: pointer; font-size: 12px;">
+                                        <input type="radio" name="status_{{ student['id'] }}" value="Late" class="quick-status-radio">
+                                        Late
+                                    </label>
+                                </div>
+                            </td>
+                            <td>
+                                <input type="text" name="remarks_{{ student['id'] }}" placeholder="Optional notes" style="padding: 4px 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 12px; width: 130px;">
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Submit Strip -->
+            <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 16px; border-top: 1px solid #e2e8f0; margin-top: 14px;">
+                <span style="font-size: 13px; color: #64748b;">
+                    Total Enrolled: <strong>{{ students|length }} students</strong> in active muster roll
+                </span>
+                <div style="display: flex; gap: 10px;">
+                    <button type="submit" class="btn btn-primary" style="background: #1e3a8a; font-weight: 700; padding: 10px 24px; font-size: 14px;">
+                        ✓ Save Lecture Attendance Records
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var dateInput = document.getElementById('quickAttendanceDate');
+        if (dateInput && !dateInput.value) {
+            var today = new Date().toISOString().split('T')[0];
+            dateInput.value = today;
+        }
+    });
+
+    function markAllPresentQuick() {
+        document.querySelectorAll('.quick-status-present').forEach(function(r) {
+            r.checked = true;
+        });
+    }
+    </script>
+
+    <!-- =====================================================
+         COURSE OUTCOME (CO) & SYLLABUS UNIT PERFORMANCE
+         ===================================================== -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h2>📊 Course Outcome (CO) &amp; Unit Performance Matrix</h2>
+                <p>Continuous Internal Evaluation (CIE) attainment across syllabus units &amp; lab competencies (NBA Criterion 3)</p>
+            </div>
+            <div>
+                <span class="portal-badge" style="background: #f1f5f9; color: #334155;">Outcome-Based Education (OBE)</span>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="heatmap-table">
+                <thead>
+                    <tr>
+                        <th>Syllabus Unit</th>
+                        <th>Curriculum Topic</th>
+                        <th>Target Competency / CO</th>
+                        <th>Class Attainment %</th>
+                        <th>Evaluation Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in class_heatmap %}
+                    <tr>
+                        <td><strong>{{ item.unit }}</strong></td>
+                        <td>{{ item.topic }}</td>
+                        <td><span class="course-meta-tag">{{ item.skill }}</span></td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <div style="flex: 1; height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden; min-width: 80px;">
+                                    <div style="width: {{ item.mastery_pct }}%; height: 100%; background: {% if item.mastery_pct >= 75 %}#16a34a{% elif item.mastery_pct >= 50 %}#ca8a04{% else %}#dc2626{% endif %}; border-radius: 999px;"></div>
+                                </div>
+                                <strong style="min-width: 38px;">{{ item.mastery_pct }}%</strong>
+                            </div>
+                        </td>
+                        <td>
+                            {% if item.mastery_pct >= 75 %}
+                                <span class="chip-strength">● High Attainment</span>
+                            {% elif item.mastery_pct >= 50 %}
+                                <span class="chip-moderate">● Satisfactory Attainment</span>
+                            {% else %}
+                                <span class="chip-gap">⚠ Tutorial Remedial Needed</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Academic Improvement & Remedial Tutorial Action Plan -->
+        <div class="remedial-card">
+            <h4>📋 Academic Improvement &amp; Tutorial Action Plan (NBA Criterion 2.2)</h4>
+            <ul>
+                <li><strong>Dynamic Memory Allocation &amp; Pointers (C Programming):</strong> Cohort scored 48% on pointer arithmetic and heap allocation. <em>Action: Allocate an extra 2-hour lab tutorial on memory leak prevention and pointer tracing before end-term practicals.</em></li>
+                <li><strong>OOP Interface Realization &amp; Polymorphism (Java):</strong> Cohort scored 65% on interface decoupling. <em>Action: Assign supplemental programming assignments in CodeTech sandbox on multiple type inheritance.</em></li>
+                <li><strong>Control Flow &amp; Algorithmic Scripting (Python):</strong> High cohort mastery (86%). Cohort cleared for advanced algorithmic complexity problems.</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         ALLOCATED SUBJECT COURSES (CODETECH LAB ENGINE)
+         ===================================================== -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h2>📚 Allocated Subject Courses &amp; CodeTech Labs</h2>
+                <p>Theory examinations and automated programming lab practical sandboxes</p>
+            </div>
+        </div>
+
+        <div class="courses-assessment-grid">
+            <div class="course-card-item">
+                <div>
+                    <div class="course-card-head">
+                        <div class="course-icon-badge">⚙️</div>
+                        <span class="status-badge status-active">Active Teaching</span>
+                    </div>
+                    <h3>BCS301: C Programming &amp; Data Structures</h3>
+                    <p style="font-size: 13px; color: #64748b; margin: 6px 0;">Procedural programming, pointers, memory allocation, arrays, strings, and structures.</p>
+                    <div class="course-meta-tags">
+                        <span class="course-meta-tag">Theory: 20 MCQs</span>
+                        <span class="course-meta-tag">CodeTech Lab: 3 Challenges</span>
+                        <span class="course-meta-tag">Duration: 80 Min</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="course-card-item">
+                <div>
+                    <div class="course-card-head">
+                        <div class="course-icon-badge">☕</div>
+                        <span class="status-badge status-active">Active Teaching</span>
+                    </div>
+                    <h3>BCS401: Java Programming &amp; OOP</h3>
+                    <p style="font-size: 13px; color: #64748b; margin: 6px 0;">Object-oriented paradigm, JVM bytecode, inheritance, interfaces, and collections.</p>
+                    <div class="course-meta-tags">
+                        <span class="course-meta-tag">Theory: 20 MCQs</span>
+                        <span class="course-meta-tag">CodeTech Lab: 3 Challenges</span>
+                        <span class="course-meta-tag">Duration: 80 Min</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="course-card-item">
+                <div>
+                    <div class="course-card-head">
+                        <div class="course-icon-badge">🐍</div>
+                        <span class="status-badge status-active">Active Teaching</span>
+                    </div>
+                    <h3>BCS201: Python Programming</h3>
+                    <p style="font-size: 13px; color: #64748b; margin: 6px 0;">Variables, loops, functions, lists, dictionaries, and algorithmic problem solving.</p>
+                    <div class="course-meta-tags">
+                        <span class="course-meta-tag">Theory: 20 MCQs</span>
+                        <span class="course-meta-tag">CodeTech Lab: 3 Challenges</span>
+                        <span class="course-meta-tag">Duration: 80 Min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         STUDENT COHORT ATTENDANCE & PERFORMANCE ROSTER
+         ===================================================== -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h2>👥 Student Batch Academic Roster</h2>
+                <p>Current semester enrollment records, attendance compliance &amp; student profiles</p>
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <button type="button" class="btn btn-primary" onclick="toggleStudentRegisterDrawer()" style="background: #0284c7; font-weight: 700; font-size: 13px; border: none; padding: 6px 14px; border-radius: 6px; cursor: pointer; color: white;">
+                    ➕ Register New Student
+                </button>
+                <a href="{{ url_for('admin_attendance_records') }}" class="btn btn-secondary">
+                    Open Full Muster Register →
+                </a>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="student-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">Photo</th>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Email</th>
+                        <th>Attendance %</th>
+                        <th>75% Compliance</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for student in students %}
+                    <tr>
+                        <td>
+                            {% if student['face_photo'] %}
+                                <img src="{{ url_for('static', filename='uploads/face_profiles/' + student['face_photo']) }}" 
+                                     alt="{{ student['name'] }}" 
+                                     style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover; border: 1.5px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.08); vertical-align: middle;"
+                                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ student.name | urlencode }}&background=0284c7&color=fff&size=72';">
+                            {% else %}
+                                <div style="width: 36px; height: 36px; border-radius: 6px; background: #e0f2fe; color: #0284c7; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; vertical-align: middle;">
+                                    {{ student['name'][:1]|upper }}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ student["roll_number"] }}</strong></td>
+                        <td>{{ student["name"] }}</td>
+                        <td>{{ student["email"] }}</td>
+                        <td>
+                            <strong>{{ student["attendance_summary"]["percentage"] if student["attendance_summary"] else 0 }}%</strong>
+                            <small style="color: #64748b;">({{ student["attendance_summary"]["attended_classes"] if student["attendance_summary"] else 0 }}/{{ student["attendance_summary"]["total_classes"] if student["attendance_summary"] else 0 }})</small>
+                        </td>
+                        <td>
+                            {% if student["attendance_summary"] and student["attendance_summary"]["is_eligible"] %}
+                                <span class="badge-present">● Eligible</span>
+                            {% else %}
+                                <span class="badge-absent">⚠ Shortage</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('student_detail', student_id=student['id']) }}" class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px;">
+                                View Academic Profile
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Footer Logout -->
+    <div class="dashboard-footer">
+        <a href="{{ url_for('faculty_logout') }}" class="btn btn-secondary">
+            Logout of Faculty Workstation
+        </a>
+    </div>
+
+</div>
+
+<script>
+function toggleStudentRegisterDrawer() {
+    var drawer = document.getElementById('studentRegisterDrawer');
+    if (!drawer) return;
+    if (drawer.style.display === 'none' || !drawer.style.display) {
+        drawer.style.display = 'block';
+        drawer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+        drawer.style.display = 'none';
+        stopFacCam();
+    }
+}
+
+function formatAadharInput(input) {
+    let val = input.value.replace(/\D/g, '');
+    if (val.length > 12) val = val.substring(0, 12);
+    let parts = [];
+    for (let i = 0; i < val.length; i += 4) {
+        parts.push(val.substring(i, i + 4));
+    }
+    input.value = parts.join('-');
+}
+
+let facStream = null;
+
+function startFacCam() {
+    const box = document.getElementById('facCamBox');
+    const video = document.getElementById('facVideo');
+    box.style.display = 'block';
+
+    navigator.mediaDevices.getUserMedia({ video: { width: { ideal: 640 }, height: { ideal: 480 } } })
+    .then(stream => {
+        facStream = stream;
+        video.srcObject = stream;
+    })
+    .catch(err => {
+        alert('Webcam access failed or denied. You can use "Upload Passport Photo" instead.');
+        box.style.display = 'none';
+    });
+}
+
+function stopFacCam() {
+    if (facStream) {
+        facStream.getTracks().forEach(t => t.stop());
+        facStream = null;
+    }
+    const box = document.getElementById('facCamBox');
+    if (box) box.style.display = 'none';
+}
+
+function captureFacFace() {
+    const video = document.getElementById('facVideo');
+    const canvas = document.getElementById('facCanvas');
+    if (!video || !video.videoWidth) {
+        alert('Webcam is not ready yet. Please wait a moment.');
+        return;
+    }
+
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+
+    stopFacCam();
+    applyFacFace(dataUrl);
+}
+
+function handleFacFileUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(evt) {
+        applyFacFace(evt.target.result);
+    };
+    reader.readAsDataURL(file);
+}
+
+function applyFacFace(dataUrl) {
+    document.getElementById('fac_face_image_data').value = dataUrl;
+    document.getElementById('facPreviewImg').src = dataUrl;
+    document.getElementById('facPreviewBox').style.display = 'block';
+
+    const badge = document.getElementById('facBadge');
+    const text = document.getElementById('facStatusMsg');
+    badge.textContent = '● Photo Attached';
+    badge.style.background = '#dcfce7';
+    badge.style.color = '#15803d';
+    text.textContent = 'Student passport photo attached.';
+}
+
+function retakeFacFace() {
+    document.getElementById('fac_face_image_data').value = '';
+    document.getElementById('facPreviewBox').style.display = 'none';
+    document.getElementById('facFaceFile').value = '';
+    startFacCam();
+}
+
+document.getElementById('facultyRegDrawerForm')?.addEventListener('submit', function(e) {
+    const faceVal = document.getElementById('fac_face_image_data').value;
+    const fileInput = document.getElementById('facFaceFile');
+    if ((!faceVal || !faceVal.trim()) && (!fileInput.files || fileInput.files.length === 0)) {
+        e.preventDefault();
+        alert('Please capture or upload student photo before submitting.');
+    }
+});
+</script>
+
+    <!-- Faculty Change Password Modal -->
+    <div id="facultyPasswordModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+        <div style="background: white; border-radius: 14px; max-width: 440px; width: 90%; padding: 26px; box-shadow: 0 20px 40px rgba(0,0,0,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; border-bottom: 1.5px solid #e2e8f0; padding-bottom: 12px;">
+                <h3 style="margin: 0; font-size: 18px; color: #0f172a; font-weight: 800;">🔑 Change Faculty Password</h3>
+                <button type="button" onclick="toggleFacultyPasswordModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
+            </div>
+            <form action="{{ url_for('faculty_change_password') }}" method="POST">
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 4px;">Current Faculty Password *</label>
+                    <input type="password" name="current_password" required placeholder="Enter current password" style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+                <div style="margin-bottom: 14px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 4px;">New Password (Min 6 chars) *</label>
+                    <input type="password" name="new_password" required minlength="6" placeholder="Enter new password" style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+                <div style="margin-bottom: 20px;">
+                    <label style="display: block; font-size: 13px; font-weight: 700; color: #334155; margin-bottom: 4px;">Confirm New Password *</label>
+                    <input type="password" name="confirm_password" required minlength="6" placeholder="Re-enter new password" style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" onclick="toggleFacultyPasswordModal()" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background: #1e3a8a; font-weight: 700;">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script>
+    function toggleFacultyPasswordModal() {
+        var m = document.getElementById('facultyPasswordModal');
+        m.style.display = (m.style.display === 'flex') ? 'none' : 'flex';
+    }
+    </script>
+{% endblock %}

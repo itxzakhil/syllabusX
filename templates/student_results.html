@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block title %}Marksheet — SyllabusX{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="marksheet-hero">
+        <div>
+            <div class="portal-badge" style="background:#0284c7;color:#fff;">CONTINUOUS INTERNAL EVALUATION</div>
+            <h1 style="margin:12px 0 6px;color:#fff;">{{ student.name }}</h1>
+            <p style="color:#cbd5e1;margin:0;">
+                Roll {{ student.roll_number }} · B.Tech Computer Science &amp; Engineering · Session 2026-27
+            </p>
+        </div>
+        <div style="text-align:right;">
+            <div style="font-size:13px;color:#93c5fd;font-weight:700;">OVERALL CIE</div>
+            <div style="font-size:36px;font-weight:800;">{{ overall_pct }}%</div>
+            <div style="font-size:13px;color:#cbd5e1;">{{ total_obtained }} / {{ total_max }} marks</div>
+            {% if attendance_summary %}
+            <div style="margin-top:8px;font-size:13px;">
+                Attendance {{ attendance_summary.percentage }}%
+                {% if attendance_summary.is_eligible %}· Exam eligible{% else %}· Shortage{% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h2>Course-wise marksheet</h2>
+                <p>Theory CIE (MCQ) and CodeTech laboratory scores. Grades follow institutional bands.</p>
+            </div>
+            <button class="btn btn-secondary" type="button" onclick="window.print()">Print / Save PDF</button>
+        </div>
+
+        {% if marksheet %}
+        <div class="table-wrapper">
+            <table class="student-table">
+                <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Status</th>
+                        <th>Theory</th>
+                        <th>Lab</th>
+                        <th>Total</th>
+                        <th>%</th>
+                        <th>Grade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in marksheet %}
+                    <tr>
+                        <td>
+                            <strong>{{ item.row.course_code }}</strong><br>
+                            <small>{{ item.row.course_name }}</small>
+                        </td>
+                        <td>{{ item.row.status|replace('_', ' ')|title }}</td>
+                        <td>{{ item.row.mcq_score or 0 }}/{{ item.row.mcq_total or 0 }}</td>
+                        <td>{{ item.row.coding_score or 0 }}/{{ item.row.coding_total or 0 }}</td>
+                        <td><strong>{{ item.obtained }}/{{ item.maximum }}</strong></td>
+                        <td>{{ item.pct }}%</td>
+                        <td>
+                            <span class="portal-badge" style="background:{% if item.grade in ['A+','A'] %}#dcfce7;color:#166534{% elif item.grade == 'F' %}#fee2e2;color:#b91c1c{% else %}#e0f2fe;color:#0369a1{% endif %};">
+                                {{ item.grade }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No CIE attempts yet. Open CodeTech Labs from the student dashboard to begin.</p>
+            <a class="btn btn-primary" href="{{ url_for('course_selection') }}">Start an assessment</a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

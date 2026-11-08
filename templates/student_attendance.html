@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}My Attendance — SyllabusX{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- College Institutional Banner -->
+    <div class="college-badge-banner">
+        <div class="college-crest-icon">🏛️</div>
+        <div class="college-info">
+            <h2>Meerut Institute of Technology</h2>
+            <p>Student Academic &amp; Attendance Portal • Department of Computer Science &amp; Engineering</p>
+            <span class="college-tagline">Official Student Attendance Record • University 75% Statutory Rule</span>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="dashboard-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="portal-badge">STUDENT PORTAL</span>
+                <span class="status-badge status-active">Roll No: {{ student["roll_number"] }}</span>
+            </div>
+            <h1>My Attendance Record</h1>
+            <p>Official attendance log recorded by faculty for <strong>{{ student["name"] }}</strong></p>
+        </div>
+
+        <div class="header-action-buttons">
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">
+                ← Back to Dashboard
+            </a>
+            <a href="{{ url_for('course_selection') }}" class="btn btn-primary">
+                Assessments →
+            </a>
+        </div>
+    </div>
+
+
+    <!-- =====================================================
+         SUMMARY STATISTICS
+         ===================================================== -->
+    <div class="stats-grid">
+
+        <div class="stat-card stat-attendance-percentage">
+            <div class="stat-title">Overall Attendance</div>
+            <div class="stat-number {% if attendance_summary.is_eligible %}text-green{% else %}text-red{% endif %}">
+                {{ attendance_summary.percentage }}%
+            </div>
+            <div class="stat-description">
+                {% if attendance_summary.is_eligible %}
+                    <span style="color: #16a34a; font-weight: 600;">✓ Good Standing (Eligible)</span>
+                {% else %}
+                    <span style="color: #dc2626; font-weight: 600;">⚠ Shortage Alert (&lt; 75%)</span>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Total Lectures Held</div>
+            <div class="stat-number">{{ attendance_summary.total_classes }}</div>
+            <div class="stat-description">Total academic sessions</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Classes Attended</div>
+            <div class="stat-number text-green">{{ attendance_summary.present_count }}</div>
+            <div class="stat-description">Marked Present</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Classes Missed</div>
+            <div class="stat-number text-red">{{ attendance_summary.absent_count }}</div>
+            <div class="stat-description">Marked Absent</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Late Sessions</div>
+            <div class="stat-number text-amber">{{ attendance_summary.late_count }}</div>
+            <div class="stat-description">Marked Late</div>
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         POLICY / ELIGIBILITY BANNER
+         ===================================================== -->
+    {% if attendance_summary.is_eligible %}
+        <div class="notice-card" style="background: #ecfdf5; border-left: 5px solid #10b981; margin-bottom: 25px;">
+            <h3 style="color: #065f46;">✓ Attendance Eligibility Status: SATISFACTORY</h3>
+            <p>Your current attendance is <strong>{{ attendance_summary.percentage }}%</strong>, which meets the college requirement of minimum 75%. Keep up the good work!</p>
+        </div>
+    {% else %}
+        <div class="notice-card" style="background: #fef2f2; border-left: 5px solid #ef4444; margin-bottom: 25px;">
+            <h3 style="color: #991b1b;">⚠ ATTENDANCE SHORTAGE WARNING</h3>
+            <p>Your current attendance is <strong>{{ attendance_summary.percentage }}%</strong>, which is below the mandatory university threshold of 75%. You risk being debarred from end-term examinations if your attendance does not improve. Please contact your subject teacher immediately.</p>
+        </div>
+    {% endif %}
+
+
+    <!-- =====================================================
+         COURSE-WISE SUMMARY
+         ===================================================== -->
+    {% if course_summaries %}
+    <div class="dashboard-card" style="margin-bottom: 25px;">
+        <div class="card-header">
+            <div>
+                <h2>Subject-Wise Attendance Breakdown</h2>
+                <p>Course attendance progress and minimum criteria</p>
+            </div>
+        </div>
+
+        <div class="course-attendance-grid">
+            {% for item in course_summaries %}
+            <div class="course-attendance-card">
+                <div class="course-info">
+                    <strong>{{ item.course["name"] }} ({{ item.course["code"] }})</strong>
+                    <span class="course-pct {% if item.summary.is_eligible %}text-green{% else %}text-red{% endif %}">
+                        {{ item.summary.percentage }}%
+                    </span>
+                </div>
+                <div class="progress-bar-bg" style="margin: 12px 0;">
+                    <div class="progress-bar-fill {% if item.summary.is_eligible %}fill-green{% else %}fill-red{% endif %}"
+                         style="width: {{ item.summary.percentage }}%;"></div>
+                </div>
+                <div class="course-counts">
+                    <span>Total: {{ item.summary.total_classes }}</span>
+                    <span class="text-green">Present: {{ item.summary.present_count }}</span>
+                    <span class="text-red">Absent: {{ item.summary.absent_count }}</span>
+                    <span class="text-amber">Late: {{ item.summary.late_count }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+
+    <!-- =====================================================
+         DETAILED DATE-WISE ATTENDANCE LOG
+         ===================================================== -->
+    <div class="dashboard-card">
+
+        <div class="card-header">
+            <div>
+                <h2>Complete Attendance History</h2>
+                <p>Chronological log of all marked classes</p>
+            </div>
+            <div>
+                <span style="font-size: 13px; color: #6b7280;">Total records: {{ records|length }}</span>
+            </div>
+        </div>
+
+        {% if records %}
+        <div class="table-wrapper">
+            <table class="student-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Date</th>
+                        <th>Subject / Course</th>
+                        <th>Lecture Topic</th>
+                        <th>Faculty / Teacher</th>
+                        <th>Status</th>
+                        <th>Remarks / Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for rec in records %}
+                    <tr>
+                        <td>{{ loop.index }}</td>
+                        <td>
+                            <strong>{{ rec["attendance_date"] }}</strong>
+                        </td>
+                        <td>
+                            <span class="course-pill">{{ rec["course_name"] }}</span>
+                        </td>
+                        <td>
+                            {{ rec["topic"] or "Regular Class Lecture" }}
+                        </td>
+                        <td>
+                            {{ rec["faculty_name"] or "Faculty Member" }}
+                        </td>
+                        <td>
+                            {% if rec["status"] == "Present" %}
+                                <span class="badge-present">● Present</span>
+                            {% elif rec["status"] == "Absent" %}
+                                <span class="badge-absent">● Absent</span>
+                            {% else %}
+                                <span class="badge-late">● Late</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <small>{{ rec["remarks"] or "—" }}</small>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No attendance entries found for your account yet.</p>
+        </div>
+        {% endif %}
+
+    </div>
+
+
+    <!-- Footer Actions -->
+    <div class="dashboard-footer" style="margin-top: 30px;">
+        <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">
+            ← Return to Student Dashboard
+        </a>
+    </div>
+
+</div>
+
+{% endblock %}

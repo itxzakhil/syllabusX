@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}500 - Server Error | SyllabusX{% endblock %}
+
+{% block content %}
+<div class="page-container" style="max-width: 600px; margin: 60px auto; text-align: center;">
+    <div style="background: white; border: 1.5px solid #fee2e2; border-radius: 16px; padding: 40px 30px; box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.08);">
+        <div style="font-size: 72px; line-height: 1; margin-bottom: 16px;">⚙️</div>
+        <span class="portal-badge" style="background: #fee2e2; color: #dc2626; font-weight: 700; margin-bottom: 12px; display: inline-block;">ERROR 500</span>
+        <h1 style="font-size: 26px; color: #0f172a; margin: 10px 0 8px;">Internal Server Error</h1>
+        <p style="color: #64748b; font-size: 14px; line-height: 1.6; margin-bottom: 24px;">
+            The server encountered an unexpected situation while processing your request. Please try refreshing the page, or return to your portal dashboard.
+        </p>
+
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+            <button onclick="window.location.reload()" class="btn btn-secondary" style="font-weight: 700;">
+                🔄 Refresh Page
+            </button>
+            {% if session.get('student_id') %}
+                <a href="{{ url_for('student_dashboard') }}" class="btn btn-primary" style="font-weight: 700;">
+                    Return to Student Dashboard
+                </a>
+            {% elif session.get('faculty_id') %}
+                <a href="{{ url_for('faculty_dashboard') }}" class="btn btn-primary" style="font-weight: 700;">
+                    Return to Faculty Dashboard
+                </a>
+            {% elif session.get('admin_id') %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-primary" style="font-weight: 700;">
+                    Return to Admin Console
+                </a>
+            {% else %}
+                <a href="{{ url_for('index') }}" class="btn btn-primary" style="font-weight: 700;">
+                    Go to Campus Home
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

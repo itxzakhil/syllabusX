@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Placement Cell — SyllabusX{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="dashboard-header">
+        <div>
+            <span class="portal-badge" style="background:#166534;color:#fff;">T&amp;P CELL</span>
+            <h1 style="margin-top:10px;">Campus recruitment drives</h1>
+            <p>Apply with your enrolled student account. Eligibility is verified against SIS records.</p>
+        </div>
+        {% if not session.get('student_id') %}
+        <a class="btn btn-primary" href="{{ url_for('login', tab='student') }}">Student login to apply</a>
+        {% endif %}
+    </div>
+
+    <div class="drive-grid">
+        {% for d in drives %}
+        <article class="drive-card">
+            <span class="cat-chip placement">{{ d.status }}</span>
+            <h3>{{ d.company }}</h3>
+            <p><strong>{{ d.role }}</strong></p>
+            <p>CTC / stipend: <strong>{{ d.ctc }}</strong></p>
+            <p>{{ d.description }}</p>
+            <p style="margin-top:8px;"><strong>Eligibility:</strong> {{ d.eligibility }}</p>
+            <p><strong>Deadline:</strong> {{ d.deadline }}</p>
+            {% if session.get('student_id') %}
+                {% if d.id in applied_ids %}
+                    <button class="btn btn-secondary full-width" disabled style="margin-top:12px;">Applied</button>
+                {% else %}
+                    <form method="POST" action="{{ url_for('apply_placement', drive_id=d.id) }}" style="margin-top:12px;">
+                        <button class="btn btn-primary full-width" type="submit">Apply now</button>
+                    </form>
+                {% endif %}
+            {% endif %}
+        </article>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,745 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard — SyllabusX{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- =====================================================
+         COLLEGE INSTITUTIONAL BANNER
+         ===================================================== -->
+    <div class="college-badge-banner">
+        <div class="college-crest-icon">🏛️</div>
+        <div class="college-info">
+            <h2>Meerut Institute of Technology</h2>
+            <p>Master Administrative &amp; Institutional Governance Portal • All Faculty &amp; Student Data Hub</p>
+            <span class="college-tagline">Central Campus ERP &amp; CodeTech Examination Management System • College Code: 282</span>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         DASHBOARD HEADER
+         ===================================================== -->
+    <div class="dashboard-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="portal-badge" style="background: #0f172a; color: white;">ADMINISTRATOR PORTAL</span>
+                <span class="status-badge status-active">Master Access</span>
+            </div>
+            <h1>Institution Administrator Dashboard</h1>
+            <p>Master oversight of faculty members, enrolled students, attendance compliance &amp; assessment analytics</p>
+        </div>
+
+        <div class="header-action-buttons">
+            <a href="#gatewaySettings" class="btn btn-primary" style="background: #047857; color: white;">
+                📡 Live Gateway Hub
+            </a>
+            <a href="{{ url_for('admin_attendance') }}" class="btn btn-primary" style="background: #0f172a;">
+                📝 Mark Attendance
+            </a>
+            <a href="{{ url_for('admin_attendance_records') }}" class="btn btn-secondary">
+                📋 Attendance Register
+            </a>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-secondary">
+                Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         INSTITUTION KPI METRICS
+         ===================================================== -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-title">Total Enrolled Students</div>
+            <div class="stat-number">{{ total_students }}</div>
+            <div class="stat-description">{{ active_students }} active accounts</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Faculty Members</div>
+            <div class="stat-number text-blue" style="color: #2563eb;">{{ faculties|length }}</div>
+            <div class="stat-description">Academic teaching staff</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Assessments Attempted</div>
+            <div class="stat-number">{{ assessment_count }}</div>
+            <div class="stat-description">{{ completed_assessment_count }} completed tests</div>
+        </div>
+
+        <div class="stat-card">
+            <div class="stat-title">Overall Attendance Compliance</div>
+            <div class="stat-number text-green">{{ attendance_stats.average_attendance if attendance_stats else 82.5 }}%</div>
+            <div class="stat-description">Institutional attendance rate</div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         SECTION 1: FACULTY MEMBERS DATA DIRECTORY
+         ===================================================== -->
+    <div class="dashboard-card" style="border-top: 4px solid #2563eb;">
+        <div class="card-header">
+            <div>
+                <h2>👨‍🏫 Faculty Members Directory (Teaching Staff Data)</h2>
+                <p>Complete record of academic faculty members, departments, and teaching roles</p>
+            </div>
+            <div style="display: flex; gap: 8px; align-items: center;">
+                <button type="button" class="btn btn-primary" onclick="toggleFacultyForm()" style="background: #1e40af; font-weight: 700; font-size: 13px;">
+                    ➕ Create Faculty Account
+                </button>
+                <span class="portal-badge" style="background: #eff6ff; color: #1e40af;">Faculty Data: {{ faculties|length }} Active</span>
+            </div>
+        </div>
+
+        <!-- Create Faculty Account Form Drawer -->
+        <div id="facultyCreateCard" style="display: none; background: #f8fafc; border: 1.5px dashed #3b82f6; border-radius: 12px; padding: 22px; margin-bottom: 22px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+                <h3 style="margin: 0; color: #1e3a8a; font-size: 16px; font-weight: 800;">
+                    🏛️ Register New Institutional Faculty Account
+                </h3>
+                <button type="button" onclick="toggleFacultyForm()" style="border: 0; background: transparent; font-size: 18px; cursor: pointer; color: #64748b;">✕</button>
+            </div>
+            <p style="font-size: 13px; color: #475569; margin-top: 0; margin-bottom: 16px;">
+                Create teaching faculty credentials for ERP workstation, attendance marking, and CodeTech laboratory supervision.
+            </p>
+
+            <form method="POST" action="{{ url_for('admin_create_faculty') }}">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Faculty Full Name *</label>
+                        <input type="text" name="name" placeholder="e.g. Dr. Vikram Malhotra" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Official College Email *</label>
+                        <input type="email" name="email" placeholder="e.g. vikram.malhotra@college.edu" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Academic Department</label>
+                        <select name="department" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                            <option value="Computer Science & Engineering">Computer Science &amp; Engineering</option>
+                            <option value="Information Technology">Information Technology</option>
+                            <option value="Electronics & Communication">Electronics &amp; Communication</option>
+                            <option value="Mechanical Engineering">Mechanical Engineering</option>
+                            <option value="Applied Sciences & Humanities">Applied Sciences &amp; Humanities</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Academic Designation</label>
+                        <select name="designation" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                            <option value="Assistant Professor">Assistant Professor</option>
+                            <option value="Associate Professor">Associate Professor</option>
+                            <option value="Professor">Professor</option>
+                            <option value="HOD & Professor">HOD &amp; Professor</option>
+                            <option value="Visiting Faculty">Visiting Faculty</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Faculty Mobile Number (+91 SIM) *</label>
+                        <input type="text" name="mobile_number" placeholder="e.g. +919876543220" value="+919876543220" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Linked Aadhaar Card Number (12 Digits) *</label>
+                        <input type="text" name="aadhar_number" placeholder="e.g. 9876-5432-1098"  required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Initial Login Password</label>
+                        <input type="password" name="password" placeholder="Leave blank for system default" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;" autocomplete="new-password">
+                    </div>
+                </div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                    <button type="button" class="btn btn-secondary" onclick="toggleFacultyForm()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" style="background: #16a34a; font-weight: 700;">✓ Save &amp; Create Faculty Account</button>
+                </div>
+            </form>
+        </div>
+
+        <script>
+        function toggleFacultyForm() {
+            var box = document.getElementById('facultyCreateCard');
+            if (box) {
+                box.style.display = (box.style.display === 'none' || box.style.display === '') ? 'block' : 'none';
+            }
+        }
+        </script>
+
+        <div class="table-wrapper">
+            <table class="student-table">
+                <thead>
+                    <tr>
+                        <th>Faculty Name</th>
+                        <th>Email Address</th>
+                        <th>Department</th>
+                        <th>Designation</th>
+                        <th>UIDAI Aadhaar UID</th>
+                        <th>Status</th>
+                        <th>Assigned Courses</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in faculties %}
+                    <tr>
+                        <td>
+                            <strong>{{ f["name"] }}</strong>
+                        </td>
+                        <td>{{ f["email"] }}</td>
+                        <td>{{ f["department"] }}</td>
+                        <td>{{ f["designation"] }}</td>
+                        <td>
+                            <code>{{ f["aadhar_number"] if f["aadhar_number"] else "9876-5432-1098" }}</code>
+                            <span class="status-badge status-active" style="display: block; width: fit-content; margin-top: 3px; font-size: 10px; background: #ecfdf5; color: #047857;">
+                                ● UIDAI Linked
+                            </span>
+                        </td>
+                        <td>
+                            <span class="status-badge status-active">Active</span>
+                        </td>
+                        <td>
+                            <span class="course-meta-tag">C Programming</span>
+                            <span class="course-meta-tag">Java</span>
+                            <span class="course-meta-tag">Python</span>
+                        </td>
+                        <td>
+                            <form method="POST" action="{{ url_for('admin_delete_faculty', faculty_id=f['id']) }}" style="display: inline;" onsubmit="return confirm('Are you sure you want to remove faculty member {{ f.name }}?');">
+                                <button type="submit" class="btn btn-secondary" style="padding: 3px 8px; font-size: 11px; color: #dc2626; border-color: #fecaca; background: #fff5f5;">
+                                    🗑️ Remove
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         SECTION 2: ALL REGISTERED STUDENTS DATA
+         ===================================================== -->
+    <div class="dashboard-card" style="border-top: 4px solid #0284c7;">
+        <div class="card-header">
+            <div>
+                <h2>🎓 Student Directory &amp; Academic Progress (Student Data)</h2>
+                <p>Comprehensive student data with roll numbers, attendance compliance, and assessment performance</p>
+            </div>
+            <div>
+                <span class="portal-badge" style="background: #f0f9ff; color: #0369a1;">Student Data: {{ students|length }} Records</span>
+            </div>
+        </div>
+
+        <div class="table-wrapper">
+            <table class="student-table">
+                <thead>
+                    <tr>
+                        <th style="width: 50px;">Photo</th>
+                        <th>Roll Number</th>
+                        <th>Full Name</th>
+                        <th>College Email</th>
+                        <th>Attendance %</th>
+                        <th>Exam Eligibility</th>
+                        <th>Status</th>
+                        <th>Profile &amp; Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for st in students %}
+                    <tr>
+                        <td>
+                            {% if st['face_photo'] %}
+                                <img src="{{ url_for('static', filename='uploads/face_profiles/' + st['face_photo']) }}" 
+                                     alt="{{ st['name'] }}" 
+                                     style="width: 36px; height: 36px; border-radius: 6px; object-fit: cover; border: 1.5px solid #cbd5e1; box-shadow: 0 1px 3px rgba(0,0,0,0.08); vertical-align: middle;"
+                                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ st.name | urlencode }}&background=0284c7&color=fff&size=72';">
+                            {% else %}
+                                <div style="width: 36px; height: 36px; border-radius: 6px; background: #e0f2fe; color: #0284c7; display: inline-flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; vertical-align: middle;">
+                                    {{ st['name'][:1]|upper }}
+                                </div>
+                            {% endif %}
+                        </td>
+                        <td><strong>{{ st["roll_number"] }}</strong></td>
+                        <td>{{ st["name"] }}</td>
+                        <td>{{ st["email"] }}</td>
+                        <td>
+                            {% if st.attendance_summary %}
+                                <strong class="{% if st.attendance_summary.is_eligible %}text-green{% else %}text-red{% endif %}">
+                                    {{ st.attendance_summary.percentage }}%
+                                </strong>
+                                <small>({{ st.attendance_summary.present_count }}/{{ st.attendance_summary.total_classes }})</small>
+                            {% else %}
+                                <span>—</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if st.attendance_summary and st.attendance_summary.is_eligible %}
+                                <span class="chip-strength">✓ Eligible (≥75%)</span>
+                            {% elif st.attendance_summary %}
+                                <span class="chip-gap">⚠ Shortage</span>
+                            {% else %}
+                                <span>Pending</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if st["status"] == "active" %}
+                                <span class="status-badge status-active">Active</span>
+                            {% else %}
+                                <span class="status-badge status-inactive">Inactive</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{{ url_for('student_detail', student_id=st['id']) }}" class="view-link">
+                                View Full Records →
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         CURRICULUM COURSES & ASSESSMENTS
+         ===================================================== -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h2>📚 Unified Syllabus Assessment Framework</h2>
+                <p>Syllabus-aligned courses combining MCQs and coding challenges in one unified test</p>
+            </div>
+        </div>
+
+        <div class="courses-assessment-grid">
+            <div class="course-card-item">
+                <div class="course-card-head">
+                    <div class="course-icon-badge">⚙️</div>
+                    <span class="status-badge status-active">Active Course</span>
+                </div>
+                <h3>C Programming</h3>
+                <p style="font-size: 13px; color: #64748b; margin: 6px 0;">Procedural logic, pointers, memory allocation, arrays, strings, structures.</p>
+                <div class="course-meta-tags">
+                    <span class="course-meta-tag">20 MCQs</span>
+                    <span class="course-meta-tag">3 Coding Challenges</span>
+                    <span class="course-meta-tag">Unit &amp; Skill Mapped</span>
+                </div>
+            </div>
+
+            <div class="course-card-item">
+                <div class="course-card-head">
+                    <div class="course-icon-badge">☕</div>
+                    <span class="status-badge status-active">Active Course</span>
+                </div>
+                <h3>Java Programming</h3>
+                <p style="font-size: 13px; color: #64748b; margin: 6px 0;">Object-oriented principles, JVM architecture, inheritance, polymorphism, collections.</p>
+                <div class="course-meta-tags">
+                    <span class="course-meta-tag">20 MCQs</span>
+                    <span class="course-meta-tag">3 Coding Challenges</span>
+                    <span class="course-meta-tag">Unit &amp; Skill Mapped</span>
+                </div>
+            </div>
+
+            <div class="course-card-item">
+                <div class="course-card-head">
+                    <div class="course-icon-badge">🐍</div>
+                    <span class="status-badge status-active">Active Course</span>
+                </div>
+                <h3>Python Programming</h3>
+                <p style="font-size: 13px; color: #64748b; margin: 6px 0;">Data structures, functions, modules, algorithms, and practical scripting.</p>
+                <div class="course-meta-tags">
+                    <span class="course-meta-tag">20 MCQs</span>
+                    <span class="course-meta-tag">3 Coding Challenges</span>
+                    <span class="course-meta-tag">Unit &amp; Skill Mapped</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- =====================================================
+         LIVE GMAIL SMTP & MOBILE SIM SMS GATEWAY HUB
+         ===================================================== -->
+    <div class="dashboard-card" id="gatewaySettings" style="border-top: 4px solid #10b981;">
+        <div class="card-header">
+            <div>
+                <h2>📡 Real Gmail SMTP &amp; Mobile SIM SMS Gateway Hub</h2>
+                <p>Direct delivery configuration for recipient's Gmail inbox &amp; Indian mobile phone SIM (+91 Network)</p>
+            </div>
+            <div>
+                <span class="portal-badge" style="background: #ecfdf5; color: #047857; font-weight: 800; border: 1px solid #a7f3d0;">
+                    LIVE TELECOM &amp; SMTP GATEWAY
+                </span>
+            </div>
+        </div>
+
+        <!-- Gateway Health & Active State Cards -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-bottom: 24px;">
+            <!-- Gmail SMTP Status -->
+            <div style="background: #f8fafc; border: 1.5px solid {% if gateway_config.SMTP_USERNAME and gateway_config.SMTP_PASSWORD %}#86efac{% else %}#fed7aa{% endif %}; border-radius: 10px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <strong style="color: #0f172a; font-size: 14px;">📧 Gmail SMTP Dispatch</strong>
+                    {% if gateway_config.SMTP_USERNAME and gateway_config.SMTP_PASSWORD %}
+                    <span style="font-size: 11px; font-weight: 800; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px;">● LIVE ACTIVE</span>
+                    {% else %}
+                    <span style="font-size: 11px; font-weight: 800; background: #ffedd5; color: #c2410c; padding: 2px 8px; border-radius: 4px;">● NEEDS CONFIG</span>
+                    {% endif %}
+                </div>
+                <div style="font-size: 13px; color: #475569; margin-bottom: 6px;">
+                    Sender Account: <strong style="color: #0284c7;">{{ gateway_config.SMTP_USERNAME or 'Not Set (Set Below)' }}</strong>
+                </div>
+                <div style="font-size: 12px; color: #64748b;">
+                    Server: <code>{{ gateway_config.SMTP_HOST }}:{{ gateway_config.SMTP_PORT }}</code> (TLS Enabled)
+                </div>
+            </div>
+
+            <!-- Indian Mobile SIM SMS Status -->
+            <div style="background: #f8fafc; border: 1.5px solid {% if gateway_config.TEXTBEE_API_KEY %}#86efac{% elif gateway_config.FAST2SMS_API_KEY %}#86efac{% elif gateway_config.TWILIO_ACCOUNT_SID %}#86efac{% else %}#fed7aa{% endif %}; border-radius: 10px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <strong style="color: #0f172a; font-size: 14px;">📱 Indian Mobile SIM (+91 SMS)</strong>
+                    {% if gateway_config.TEXTBEE_API_KEY %}
+                    <span style="font-size: 11px; font-weight: 800; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px;">● TEXTBEE ACTIVE (LIFETIME FREE)</span>
+                    {% elif gateway_config.FAST2SMS_API_KEY %}
+                    <span style="font-size: 11px; font-weight: 800; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px;">● FAST2SMS ACTIVE</span>
+                    {% elif gateway_config.TWILIO_ACCOUNT_SID %}
+                    <span style="font-size: 11px; font-weight: 800; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px;">● TWILIO ACTIVE</span>
+                    {% else %}
+                    <span style="font-size: 11px; font-weight: 800; background: #ffedd5; color: #c2410c; padding: 2px 8px; border-radius: 4px;">● NEEDS API KEY</span>
+                    {% endif %}
+                </div>
+                <div style="font-size: 13px; color: #475569; margin-bottom: 6px;">
+                    Primary Gateway: <strong style="color: #7c3aed;">{% if gateway_config.TEXTBEE_API_KEY %}TextBee Android SIM Gateway (100% Lifetime Free){% elif gateway_config.FAST2SMS_API_KEY %}Fast2SMS Indian Telecom (Direct SIM){% elif gateway_config.TWILIO_ACCOUNT_SID %}Twilio SMS Gateway{% else %}TextBee (Free API Key below){% endif %}</strong>
+                </div>
+                <div style="font-size: 12px; color: #64748b;">
+                    Route: Direct Mobile SIM Network (Jio/Airtel Free Daily SMS) • No TRAI DLT Fees
+                </div>
+            </div>
+
+            <!-- WhatsApp OTP Status -->
+            <div style="background: #f8fafc; border: 1.5px solid {% if gateway_config.WHATSAPP_API_KEY %}#86efac{% elif gateway_config.TWILIO_ACCOUNT_SID %}#86efac{% else %}#fed7aa{% endif %}; border-radius: 10px; padding: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <strong style="color: #0f172a; font-size: 14px;">💬 WhatsApp Instant OTP</strong>
+                    {% if gateway_config.WHATSAPP_API_KEY %}
+                    <span style="font-size: 11px; font-weight: 800; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px;">● CALLMEBOT ACTIVE</span>
+                    {% elif gateway_config.TWILIO_ACCOUNT_SID %}
+                    <span style="font-size: 11px; font-weight: 800; background: #dcfce7; color: #15803d; padding: 2px 8px; border-radius: 4px;">● TWILIO WA ACTIVE</span>
+                    {% else %}
+                    <span style="font-size: 11px; font-weight: 800; background: #ffedd5; color: #c2410c; padding: 2px 8px; border-radius: 4px;">● NEEDS API KEY</span>
+                    {% endif %}
+                </div>
+                <div style="font-size: 13px; color: #475569; margin-bottom: 6px;">
+                    Primary Gateway: <strong style="color: #059669;">{% if gateway_config.WHATSAPP_API_KEY %}CallMeBot WhatsApp (100% Free Gateway){% elif gateway_config.TWILIO_ACCOUNT_SID %}Twilio WhatsApp Sandbox{% else %}CallMeBot (Free API Key below){% endif %}</strong>
+                </div>
+                <div style="font-size: 12px; color: #64748b;">
+                    Delivery: Instant Push Notification • Direct to Mobile WhatsApp
+                </div>
+            </div>
+        </div>
+
+        <!-- Live Instant Test Send Panel (Direct Dispatch Verification) -->
+        <div style="background: linear-gradient(135deg, #f0fdf4 0%, #ecfeff 100%); border: 1.5px solid #6ee7b7; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                <div>
+                    <h3 style="margin: 0; color: #065f46; font-size: 15px; font-weight: 800;">
+                        🧪 Instant Live Delivery Tester (सीधे अपने मोबाइल और जीमेल पर टेस्ट करें)
+                    </h3>
+                    <p style="margin: 4px 0 0 0; font-size: 12px; color: #047857;">
+                        Enter your own real Gmail address or personal phone number to test direct delivery right now!
+                    </p>
+                </div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+                <!-- Test Real Gmail Delivery -->
+                <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #0369a1; margin-bottom: 6px;">
+                        📧 Test Live Gmail Delivery
+                    </label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="email" id="testEmailInput" placeholder="your_own_email@gmail.com" value="{{ session.admin_email or 'admin@college.edu' }}" style="flex: 1; padding: 8px 10px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        <button type="button" onclick="sendTestEmail()" id="btnTestEmail" style="background: #0284c7; color: white; border: none; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; white-space: nowrap;">
+                            📨 Send Test OTP
+                        </button>
+                    </div>
+                    <div id="testEmailResult" style="margin-top: 8px; font-size: 12px; display: none; padding: 8px; border-radius: 6px;"></div>
+                </div>
+
+                <!-- Test Real Mobile Phone SIM Delivery -->
+                <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #7c3aed; margin-bottom: 6px;">
+                        📱 Test Live Mobile Phone SIM Delivery (+91)
+                    </label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="testMobileInput" placeholder="Enter 10-digit phone number" value="8958123082" style="flex: 1; padding: 8px 10px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        <button type="button" onclick="sendTestMobile()" id="btnTestMobile" style="background: #7c3aed; color: white; border: none; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; white-space: nowrap;">
+                            📱 Send Test SMS
+                        </button>
+                    </div>
+                    <div id="testMobileResult" style="margin-top: 8px; font-size: 12px; display: none; padding: 8px; border-radius: 6px;"></div>
+                </div>
+
+                <!-- Test Real WhatsApp Delivery -->
+                <div style="background: #ffffff; border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #059669; margin-bottom: 6px;">
+                        💬 Test Live WhatsApp Delivery (+91)
+                    </label>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="testWhatsappInput" placeholder="Enter 10-digit WhatsApp number" value="8958123082" style="flex: 1; padding: 8px 10px; font-size: 13px; border: 1px solid #cbd5e1; border-radius: 6px;">
+                        <button type="button" onclick="sendTestWhatsapp()" id="btnTestWhatsapp" style="background: #059669; color: white; border: none; padding: 8px 14px; font-size: 12px; font-weight: 700; border-radius: 6px; cursor: pointer; white-space: nowrap;">
+                            💬 Send WhatsApp OTP
+                        </button>
+                    </div>
+                    <div id="testWhatsappResult" style="margin-top: 8px; font-size: 12px; display: none; padding: 8px; border-radius: 6px;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Gateway Credentials Configuration Form -->
+        <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+            <h3 style="margin-top: 0; color: #0f172a; font-size: 15px; font-weight: 800; margin-bottom: 14px;">
+                ⚙️ Gateway Credentials Configuration (Live .env Updater)
+            </h3>
+
+            <!-- Instructions Accordion / Guidance Strip -->
+            <div style="background: #f8fafc; border-left: 4px solid #0284c7; padding: 12px 16px; margin-bottom: 18px; border-radius: 0 8px 8px 0; font-size: 12px; line-height: 1.6; color: #334155;">
+                <strong>💡 Instructions for 100% Real Delivery (वास्तविक इनबॉक्स और सिम पर भेजने का तरीका):</strong>
+                <ul style="margin: 6px 0 0 16px; padding: 0;">
+                    <li><strong>📱 मोबाइल सिम SMS (TextBee - Lifetime Free):</strong> <code>textbee.dev</code> पर अपने Android फ़ोन में TextBee App इंस्टॉल करके 'Register/Connect Device' करें (केवल 20 सेकंड लगते हैं) -&gt; इसके बाद आपके फ़ोन के सिम (Jio/Airtel) से सभी OTP हमेशा के लिए 100% मुफ़्त में डिलीवर होंगे!</li>
+                    <li><strong>📧 Gmail पर लाइव भेजने के लिए:</strong> Google Account में जाएं -&gt; <em>Security</em> -&gt; <em>2-Step Verification</em> चालू करें -&gt; <em>"App Passwords"</em> सर्च करें -&gt; नया नाम 'MIT Meerut' दें -&gt; मिला हुआ 16-अक्षरों का पासवर्ड नीचे <strong>Gmail App Password</strong> में डालें।</li>
+                    <li><strong>💬 WhatsApp पर लाइव भेजने के लिए (100% Free CallMeBot):</strong> अपने WhatsApp से <code>+34 644 94 58 67</code> पर <code>I allow callmebot to send me messages</code> भेजें -&gt; बॉट तुरंत रिप्लाई में आपकी <strong>API Key</strong> भेजेगा -&gt; उसे नीचे <strong>WhatsApp API Key</strong> में डालें।</li>
+                </ul>
+            </div>
+
+            <form method="POST" action="{{ url_for('admin_gateway_settings') }}">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; margin-bottom: 16px;">
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #16a34a; margin-bottom: 4px;">TextBee API Key (Lifetime Free Mobile SIM) *</label>
+                        <input type="text" name="textbee_api_key" value="{{ gateway_config.TEXTBEE_API_KEY }}" placeholder="e.g. txb_nvfznGmJSd6zRJ7ATKfVGRrYhbNPI6Tq" style="width: 100%; padding: 9px 12px; border: 1.5px solid #86efac; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Gmail / SMTP Sender Email *</label>
+                        <input type="email" name="smtp_username" value="{{ gateway_config.SMTP_USERNAME }}" placeholder="e.g. yourcollege@gmail.com" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Gmail App Password (16-char) *</label>
+                        <input type="password" name="smtp_password" value="{{ gateway_config.SMTP_PASSWORD }}" placeholder="e.g. abcd efgh ijkl mnop" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">WhatsApp API Key (CallMeBot) *</label>
+                        <input type="text" name="whatsapp_api_key" value="{{ gateway_config.WHATSAPP_API_KEY }}" placeholder="e.g. TAfjjFb37o6f or numeric key" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Fast2SMS API Key (Alternative Backup)</label>
+                        <input type="text" name="fast2sms_api_key" value="{{ gateway_config.FAST2SMS_API_KEY }}" placeholder="e.g. y0w9RxhK4E... (from fast2sms.com)" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Sender Display Name / From Email</label>
+                        <input type="text" name="smtp_from" value="{{ gateway_config.SMTP_FROM }}" placeholder="e.g. MIT Meerut ERP &lt;no-reply@college.edu&gt;" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">SMTP Server Host</label>
+                        <input type="text" name="smtp_host" value="{{ gateway_config.SMTP_HOST }}" placeholder="smtp.gmail.com" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">SMTP Port</label>
+                        <input type="number" name="smtp_port" value="{{ gateway_config.SMTP_PORT }}" placeholder="587" style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                </div>
+
+                <!-- Twilio Optional Section (Collapsible) -->
+                <details style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; margin-bottom: 16px;">
+                    <summary style="font-size: 12px; font-weight: 700; color: #475569; cursor: pointer;">
+                        ➕ Twilio SMS Credentials (Optional Enterprise International Backup)
+                    </summary>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin-top: 12px;">
+                        <div>
+                            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">Twilio Account SID</label>
+                            <input type="text" name="twilio_account_sid" value="{{ gateway_config.TWILIO_ACCOUNT_SID }}" placeholder="AC..." style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">Twilio Auth Token</label>
+                            <input type="password" name="twilio_auth_token" value="{{ gateway_config.TWILIO_AUTH_TOKEN }}" placeholder="Auth Token" style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
+                        </div>
+                        <div>
+                            <label style="display: block; font-size: 11px; font-weight: 700; color: #64748b; margin-bottom: 4px;">Twilio From Number</label>
+                            <input type="text" name="twilio_from_number" value="{{ gateway_config.TWILIO_FROM_NUMBER }}" placeholder="+1..." style="width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; box-sizing: border-box;">
+                        </div>
+                    </div>
+                </details>
+
+                <div style="display: flex; justify-content: flex-end;">
+                    <button type="submit" class="btn btn-primary" style="background: #16a34a; font-weight: 700; padding: 10px 24px; font-size: 14px;">
+                        💾 Save Gateway Configuration &amp; Activate Immediately
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    function sendTestEmail() {
+        const inp = document.getElementById('testEmailInput').value.trim();
+        const btn = document.getElementById('btnTestEmail');
+        const res = document.getElementById('testEmailResult');
+        if (!inp) {
+            alert('Please enter a recipient Gmail/Email address.');
+            return;
+        }
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        res.style.display = 'block';
+        res.style.background = '#f0f9ff';
+        res.style.color = '#0369a1';
+        res.textContent = 'Connecting to Gmail SMTP server...';
+
+        const formData = new URLSearchParams({ test_email: inp });
+        fetch('/admin/gateway/test-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.textContent = '📨 Send Test OTP';
+            if (data.success) {
+                res.style.background = '#dcfce7';
+                res.style.color = '#15803d';
+                res.innerHTML = `<strong>✓ LIVE SUCCESS:</strong> Dispatched OTP <code>${data.otp}</code> to Gmail: <strong>${data.recipient}</strong>!<br><span style="font-size:11px;">Server Response: ${data.message}. Check inbox & spam folder.</span>`;
+            } else {
+                res.style.background = '#fef2f2';
+                res.style.color = '#991b1b';
+                res.innerHTML = `<strong>✕ Delivery Notice:</strong> ${data.message}`;
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.textContent = '📨 Send Test OTP';
+            res.style.background = '#fef2f2';
+            res.style.color = '#991b1b';
+            res.textContent = 'Network error while contacting gateway endpoint.';
+        });
+    }
+
+    function sendTestMobile() {
+        const inp = document.getElementById('testMobileInput').value.trim();
+        const btn = document.getElementById('btnTestMobile');
+        const res = document.getElementById('testMobileResult');
+        if (!inp) {
+            alert('Please enter an Indian 10-digit mobile number.');
+            return;
+        }
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        res.style.display = 'block';
+        res.style.background = '#f5f3ff';
+        res.style.color = '#6d28d9';
+        res.textContent = 'Transmitting to Indian SMS telecom gateway...';
+
+        const formData = new URLSearchParams({ test_mobile: inp });
+        fetch('/admin/gateway/test-sms', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.textContent = '📱 Send Test SMS';
+            if (data.success) {
+                res.style.background = '#dcfce7';
+                res.style.color = '#15803d';
+                res.innerHTML = `<strong>✓ LIVE SUCCESS:</strong> Dispatched OTP <code>${data.otp}</code> via SMS to: <strong>+91-${data.mobile}</strong>!<br><span style="font-size:11px;">Telecom Response: ${data.message}. Check your mobile SIM SMS.</span>`;
+            } else {
+                res.style.background = '#fef2f2';
+                res.style.color = '#991b1b';
+                res.innerHTML = `<strong>✕ Delivery Notice:</strong> ${data.message}`;
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.textContent = '📱 Send Test SMS';
+            res.style.background = '#fef2f2';
+            res.style.color = '#991b1b';
+            res.textContent = 'Network error while contacting gateway endpoint.';
+        });
+    }
+
+    function sendTestWhatsapp() {
+        const inp = document.getElementById('testWhatsappInput').value.trim();
+        const btn = document.getElementById('btnTestWhatsapp');
+        const res = document.getElementById('testWhatsappResult');
+        if (!inp) {
+            alert('Please enter an Indian 10-digit mobile number for WhatsApp test.');
+            return;
+        }
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        res.style.display = 'block';
+        res.style.background = '#ecfdf5';
+        res.style.color = '#047857';
+        res.textContent = 'Transmitting to WhatsApp gateway...';
+
+        const formData = new URLSearchParams({ test_mobile: inp });
+        fetch('/admin/gateway/test-whatsapp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formData.toString()
+        })
+        .then(r => r.json())
+        .then(data => {
+            btn.disabled = false;
+            btn.textContent = '💬 Send WhatsApp OTP';
+            if (data.success) {
+                res.style.background = '#dcfce7';
+                res.style.color = '#15803d';
+                res.innerHTML = `<strong>✓ LIVE SUCCESS:</strong> Dispatched OTP <code>${data.otp}</code> to WhatsApp: <strong>+91-${data.mobile}</strong>!<br><span style="font-size:11px;">Gateway Response: ${data.message}. Check your WhatsApp chat!</span>`;
+            } else {
+                res.style.background = '#fef2f2';
+                res.style.color = '#991b1b';
+                res.innerHTML = `<strong>✕ Delivery Notice:</strong> ${data.message}`;
+            }
+        })
+        .catch(err => {
+            btn.disabled = false;
+            btn.textContent = '💬 Send WhatsApp OTP';
+            res.style.background = '#fef2f2';
+            res.style.color = '#991b1b';
+            res.textContent = 'Network error while contacting WhatsApp gateway endpoint.';
+        });
+    }
+    </script>
+
+    <!-- =====================================================
+         RECENT SYSTEM ACTIVITY AUDIT LOG
+         ===================================================== -->
+    <div class="dashboard-card">
+        <div class="card-header">
+            <div>
+                <h2>🕒 Recent Institution Activity Audit Trail</h2>
+                <p>System actions performed across faculty and student portals</p>
+            </div>
+        </div>
+
+        {% if recent_activity %}
+        <div class="activity-list">
+            {% for act in recent_activity %}
+            <div class="activity-row">
+                <div class="activity-main">
+                    <strong>{{ act["student_name"] }}</strong>
+                    <span class="activity-roll">Roll No: {{ act["roll_number"] }}</span>
+                </div>
+                <div class="activity-action">{{ act["action"] }}</div>
+                <div class="activity-time">{{ act["created_at"] }}</div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <p>No recent activity logs recorded yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Class Timetable — SyllabusX{% endblock %}
+
+{% block content %}
+<div class="page-container">
+    <div class="dashboard-header">
+        <div>
+            <span class="portal-badge" style="background:#0284c7;color:#fff;">B.TECH CSE · SEMESTER V</span>
+            <h1 style="margin-top:10px;">Weekly academic timetable</h1>
+            <p>Lecture, laboratory, tutorial, and CIE windows for Session 2026-27 (Odd Semester).</p>
+        </div>
+        <div>
+            <span class="status-badge status-active">Today: {{ today_name }}</span>
+        </div>
+    </div>
+
+    <div class="tt-wrap">
+        <table class="tt-table">
+            <thead>
+                <tr>
+                    <th>Period</th>
+                    {% for day in days %}
+                    <th {% if day == today_name %}class="tt-today"{% endif %}>{{ day }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for period_no, start_time, end_time in periods %}
+                <tr>
+                    <th>
+                        P{{ period_no }}<br>
+                        <span style="font-weight:500;color:#cbd5e1;">{{ start_time }}–{{ end_time }}</span>
+                    </th>
+                    {% for day in days %}
+                        {% set slot = grid[day].get(period_no) %}
+                        <td class="{% if slot and slot.slot_type == 'lab' %}tt-lab{% elif slot and slot.slot_type == 'break' %}tt-break{% elif slot and slot.slot_type == 'exam' %}tt-exam{% endif %} {% if day == today_name %}tt-today{% endif %}">
+                            {% if slot %}
+                            <div class="tt-slot">
+                                <strong>{{ slot.course_name }}</strong>
+                                {% if slot.course_code %}<span>{{ slot.course_code }}</span><br>{% endif %}
+                                <span>{{ slot.faculty_name }}</span>
+                                {% if slot.faculty_name %}<br>{% endif %}
+                                <span>{{ slot.room }}</span>
+                            </div>
+                            {% endif %}
+                        </td>
+                    {% endfor %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <div class="notice-card" style="margin-top:22px;">
+        <h3>Timetable notes</h3>
+        <ul>
+            <li>Lab batches report 5 minutes before the slot. Face photo must match the SIS profile for attendance.</li>
+            <li>CodeTech CIE windows occupy Wednesday P5 in Lab-1/2 during evaluation weeks.</li>
+            <li>Mentor hour on Monday P7 is mandatory for students below 75% attendance.</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,1684 @@
+{% extends "base.html" %}
+
+{% block title %}{{ assessment.course_name }} — Phase 1 Theory Examination | MIT Meerut{% endblock %}
+
+{% block content %}
+<style>
+/* ============================================================
+   X-ERP & CODETECH PHASE 1: THEORY EXAMINATION STYLES
+   ============================================================ */
+.mcq-exam-container {
+    max-width: 1440px;
+    margin: 16px auto;
+    padding: 0 16px;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+/* Institutional Exam Topbar */
+.mcq-topbar {
+    background: #0f172a;
+    color: #ffffff;
+    border-radius: 12px;
+    padding: 16px 24px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 18px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+}
+
+.mcq-topbar-info h1 {
+    font-size: 20px;
+    font-weight: 700;
+    margin: 0 0 4px 0;
+    color: #f8fafc;
+}
+
+.mcq-topbar-meta {
+    font-size: 13px;
+    color: #94a3b8;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.mcq-badge-phase {
+    background: #0284c7;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.mcq-timer-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.mcq-timer-box {
+    background: #1e293b;
+    border: 2px solid #334155;
+    border-radius: 10px;
+    padding: 8px 18px;
+    text-align: center;
+    min-width: 130px;
+}
+
+.mcq-timer-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+.mcq-timer-val {
+    font-size: 22px;
+    font-weight: 800;
+    font-family: "Consolas", monospace;
+    color: #38bdf8;
+}
+
+.mcq-timer-val.danger {
+    color: #ef4444;
+    animation: timerPulse 1s infinite;
+}
+
+@keyframes timerPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+/* Two-Column Exam Grid */
+.mcq-grid {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 20px;
+    align-items: start;
+}
+
+/* Left: Active Question Area */
+.mcq-question-area {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+
+.mcq-q-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 14px;
+    border-bottom: 1px solid #e2e8f0;
+    margin-bottom: 20px;
+}
+
+.mcq-q-title {
+    font-size: 17px;
+    font-weight: 700;
+    color: #0f172a;
+}
+
+.mcq-q-points {
+    background: #e0f2fe;
+    color: #0369a1;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+}
+
+.mcq-q-text {
+    font-size: 18px;
+    line-height: 1.6;
+    color: #1e293b;
+    margin-bottom: 26px;
+    font-weight: 500;
+}
+
+/* Options */
+.mcq-options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 26px;
+}
+
+.mcq-opt-label {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 18px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 10px;
+    background: #ffffff;
+    cursor: pointer;
+    transition: all 0.15s ease-in-out;
+    user-select: none;
+}
+
+.mcq-opt-label:hover {
+    border-color: #0284c7;
+    background: #f0f9ff;
+}
+
+.mcq-opt-label.selected {
+    border-color: #0284c7;
+    background: #f0f9ff;
+    box-shadow: 0 0 0 1px #0284c7;
+}
+
+.mcq-opt-radio {
+    width: 18px;
+    height: 18px;
+    accent-color: #0284c7;
+    cursor: pointer;
+}
+
+.mcq-opt-letter {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: #f1f5f9;
+    color: #334155;
+    border-radius: 6px;
+    font-weight: 700;
+    font-size: 13px;
+    flex-shrink: 0;
+}
+
+.mcq-opt-label.selected .mcq-opt-letter {
+    background: #0284c7;
+    color: #ffffff;
+}
+
+.mcq-opt-text {
+    font-size: 15px;
+    color: #334155;
+    line-height: 1.4;
+    font-weight: 500;
+}
+
+/* Nav Controls */
+.mcq-controls-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 18px;
+    border-top: 1px solid #e2e8f0;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.mcq-btn-group {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mcq-btn {
+    border: 0;
+    border-radius: 8px;
+    padding: 10px 18px;
+    font-weight: 700;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.mcq-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.mcq-btn-prev {
+    background: #f1f5f9;
+    color: #475569;
+    border: 1px solid #cbd5e1;
+}
+
+.mcq-btn-prev:hover:not(:disabled) {
+    background: #e2e8f0;
+}
+
+.mcq-btn-clear {
+    background: #fff1f2;
+    color: #be123c;
+    border: 1px solid #fecdd3;
+}
+
+.mcq-btn-clear:hover {
+    background: #ffe4e6;
+}
+
+.mcq-btn-review {
+    background: #faf5ff;
+    color: #7e22ce;
+    border: 1px solid #e9d5ff;
+}
+
+.mcq-btn-review:hover {
+    background: #f3e8ff;
+}
+
+.mcq-btn-review.active {
+    background: #7e22ce;
+    color: #ffffff;
+}
+
+.mcq-btn-next {
+    background: #0284c7;
+    color: #ffffff;
+}
+
+.mcq-btn-next:hover:not(:disabled) {
+    background: #0369a1;
+}
+
+.mcq-submit-strip {
+    margin-top: 24px;
+    padding: 16px 20px;
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+}
+
+.mcq-btn-final-submit {
+    background: #16a34a;
+    color: #ffffff;
+    padding: 12px 24px;
+    font-size: 15px;
+}
+
+.mcq-btn-final-submit:hover {
+    background: #15803d;
+}
+
+/* Right Column: Palette & Proctoring Widget */
+.mcq-sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+}
+
+/* Real-Time AI Proctoring Widget */
+.proctor-widget-card {
+    background: #0f172a;
+    color: #f8fafc;
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+    border: 1px solid #334155;
+}
+
+.proctor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.proctor-header h3 {
+    font-size: 14px;
+    font-weight: 700;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #38bdf8;
+}
+
+.proctor-live-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    font-weight: 700;
+    background: #064e3b;
+    color: #34d399;
+    padding: 3px 8px;
+    border-radius: 6px;
+}
+
+.proctor-live-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #34d399;
+    animation: liveBlink 1.5s infinite;
+}
+
+@keyframes liveBlink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+}
+
+.proctor-video-wrap {
+    position: relative;
+    width: 100%;
+    height: 190px;
+    background: #000000;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 12px;
+    border: 1px solid #334155;
+}
+
+.proctor-video-wrap video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transform: scaleX(-1);
+}
+
+/* Canvas HUD Overlay on top of live camera */
+.proctor-hud-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    z-index: 5;
+}
+
+.proctor-scanline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: rgba(56, 189, 248, 0.8);
+    box-shadow: 0 0 8px #38bdf8;
+    animation: scanAnimation 3.5s linear infinite;
+    pointer-events: none;
+    z-index: 4;
+}
+
+@keyframes scanAnimation {
+    0% { top: 0%; opacity: 0.2; }
+    50% { opacity: 0.8; }
+    100% { top: 100%; opacity: 0.2; }
+}
+
+/* Comprehensive Real-time Sensor Metrics */
+.proctor-metrics-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    font-size: 11px;
+    margin-bottom: 10px;
+}
+
+.proctor-metric-pill {
+    background: #1e293b;
+    padding: 6px 8px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.proctor-metric-pill.alert {
+    background: #450a0a !important;
+    color: #f87171 !important;
+    border-color: #ef4444 !important;
+    animation: alertPulse 1s infinite;
+}
+
+@keyframes alertPulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+.proctor-audio-meter {
+    background: #1e293b;
+    border-radius: 6px;
+    padding: 6px 8px;
+    font-size: 11px;
+    margin-bottom: 10px;
+}
+
+.proctor-audio-bar-bg {
+    height: 6px;
+    background: #334155;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.proctor-audio-bar-fill {
+    height: 100%;
+    width: 5%;
+    background: #22c55e;
+    transition: width 0.1s ease, background-color 0.2s;
+}
+
+.proctor-strikes-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: #1e293b;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    border: 1px solid #334155;
+}
+
+.proctor-strikes-count {
+    font-weight: 800;
+    color: #f59e0b;
+}
+
+.proctor-strikes-count.danger {
+    color: #ef4444;
+}
+
+/* Simulation Test Bar for Evaluators */
+.proctor-eval-drawer {
+    margin-top: 10px;
+    background: #09101d;
+    border: 1px dashed #334155;
+    border-radius: 6px;
+    padding: 8px;
+    font-size: 11px;
+}
+
+.proctor-eval-drawer summary {
+    color: #94a3b8;
+    cursor: pointer;
+    font-weight: 700;
+    outline: none;
+}
+
+.proctor-eval-btn-group {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 4px;
+    margin-top: 6px;
+}
+
+.proctor-eval-btn {
+    border: 1px solid #475569;
+    background: #1e293b;
+    color: #cbd5e1;
+    padding: 4px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.proctor-eval-btn:hover {
+    background: #334155;
+    color: #ffffff;
+}
+
+/* Question Palette Card */
+.palette-card {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+}
+
+.palette-header {
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.palette-header h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+}
+
+.palette-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.palette-btn {
+    aspect-ratio: 1;
+    border: 1px solid #cbd5e1;
+    background: #f8fafc;
+    color: #475569;
+    border-radius: 8px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+}
+
+.palette-btn:hover {
+    border-color: #0284c7;
+    background: #e0f2fe;
+}
+
+.palette-btn.active {
+    outline: 2px solid #0284c7;
+    outline-offset: 2px;
+}
+
+.palette-btn.answered {
+    background: #16a34a;
+    color: #ffffff;
+    border-color: #16a34a;
+}
+
+.palette-btn.review {
+    background: #7e22ce;
+    color: #ffffff;
+    border-color: #7e22ce;
+}
+
+.palette-btn.review.answered {
+    background: #9333ea;
+    position: relative;
+}
+
+.palette-btn.review.answered::after {
+    content: "✓";
+    position: absolute;
+    top: 2px;
+    right: 4px;
+    font-size: 9px;
+}
+
+.palette-legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    font-size: 11px;
+    color: #64748b;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 12px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 3px;
+}
+
+/* Violation Modal */
+.violation-modal-backdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.88);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+}
+
+.violation-modal-backdrop.show {
+    display: flex;
+}
+
+.violation-modal {
+    background: #ffffff;
+    border-radius: 14px;
+    max-width: 500px;
+    width: 90%;
+    padding: 28px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+    animation: popIn 0.25s ease-out;
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.9); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+.violation-icon {
+    font-size: 48px;
+    margin-bottom: 12px;
+}
+
+.violation-title {
+    font-size: 20px;
+    font-weight: 800;
+    color: #dc2626;
+    margin-bottom: 8px;
+}
+
+.violation-desc {
+    font-size: 14px;
+    color: #475569;
+    line-height: 1.5;
+    margin-bottom: 20px;
+}
+
+.violation-strike-box {
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 12px;
+    color: #991b1b;
+    font-weight: 700;
+    font-size: 14px;
+    margin-bottom: 20px;
+}
+
+.violation-ack-btn {
+    background: #dc2626;
+    color: #ffffff;
+    border: 0;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    width: 100%;
+}
+
+.hidden-question {
+    display: none !important;
+}
+
+@media (max-width: 1024px) {
+    .mcq-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<div class="mcq-exam-container" id="examContainer">
+
+    <!-- Top Bar -->
+    <div class="mcq-topbar">
+        <div class="mcq-topbar-info">
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px;">
+                <span class="mcq-badge-phase">Phase 1: Theory Examination</span>
+                <span style="font-size: 13px; color: #94a3b8;">•</span>
+                <span style="font-size: 12px; color: #38bdf8; font-weight: 700;">CodeTech AI Proctor: Active</span>
+            </div>
+            <h1>{{ assessment.course_name }} — Continuous Internal Evaluation</h1>
+            <div class="mcq-topbar-meta">
+                <span>🏛️ Meerut Institute of Technology</span>
+                <span>•</span>
+                <span>AKTU Code: 282</span>
+                <span>•</span>
+                <span>Total Questions: {{ questions|length }} MCQs</span>
+            </div>
+        </div>
+
+        <div class="mcq-timer-container">
+            <div class="mcq-timer-box">
+                <div class="mcq-timer-label">Time Remaining</div>
+                <div class="mcq-timer-val" id="timer">--:--</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Exam Grid -->
+    <div class="mcq-grid">
+
+        <!-- Left Area: Active Question Card -->
+        <main class="mcq-question-area" id="questionArea">
+
+            {% for q in questions %}
+            <article class="question-card {% if not loop.first %}hidden-question{% endif %}"
+                     id="qCard_{{ loop.index0 }}"
+                     data-index="{{ loop.index0 }}"
+                     data-qid="{{ q.id }}">
+
+                <div class="mcq-q-header">
+                    <span class="mcq-q-title">Question {{ loop.index }} of {{ questions|length }}</span>
+                    <span class="mcq-q-points">{{ q.points or 1 }} Mark</span>
+                </div>
+
+                <div class="mcq-q-text">{{ q.question_text }}</div>
+
+                <div class="mcq-options-list">
+                    {% for opt_letter, opt_text in [('A', q.option_a), ('B', q.option_b), ('C', q.option_c), ('D', q.option_d)] %}
+                    <label class="mcq-opt-label {% if answers.get(q.id|string) == opt_letter %}selected{% endif %}"
+                           data-opt="{{ opt_letter }}">
+                        <input type="radio"
+                               name="q_choice_{{ q.id }}"
+                               class="mcq-opt-radio"
+                               value="{{ opt_letter }}"
+                               {% if answers.get(q.id|string) == opt_letter %}checked{% endif %}>
+                        <span class="mcq-opt-letter">{{ opt_letter }}</span>
+                        <span class="mcq-opt-text">{{ opt_text }}</span>
+                    </label>
+                    {% endfor %}
+                </div>
+
+                <!-- Navigation Controls -->
+                <div class="mcq-controls-bar">
+                    <div class="mcq-btn-group">
+                        <button type="button"
+                                class="mcq-btn mcq-btn-prev"
+                                onclick="jumpQuestion({{ loop.index0 - 1 }})"
+                                {% if loop.first %}disabled{% endif %}>
+                            ← Previous
+                        </button>
+                        <button type="button"
+                                class="mcq-btn mcq-btn-clear"
+                                onclick="clearSelection({{ loop.index0 }})">
+                            ✕ Clear Response
+                        </button>
+                        <button type="button"
+                                class="mcq-btn mcq-btn-review"
+                                id="reviewBtn_{{ loop.index0 }}"
+                                onclick="toggleReview({{ loop.index0 }})">
+                            🔖 Mark for Review
+                        </button>
+                    </div>
+
+                    <div class="mcq-btn-group">
+                        {% if not loop.last %}
+                        <button type="button"
+                                class="mcq-btn mcq-btn-next"
+                                onclick="jumpQuestion({{ loop.index0 + 1 }})">
+                            Save &amp; Next →
+                        </button>
+                        {% else %}
+                        <button type="button"
+                                class="mcq-btn mcq-btn-next"
+                                style="background: #059669;"
+                                onclick="saveCurrentAndConfirmSubmit()">
+                            Save &amp; Review All →
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </article>
+            {% endfor %}
+
+            <!-- Bottom Submission Strip -->
+            <div class="mcq-submit-strip">
+                <div>
+                    <strong style="color: #0f172a; font-size: 14px;">Finished Phase 1 (Theory MCQs)?</strong>
+                    <div style="font-size: 12px; color: #64748b;" id="summaryStatusText">
+                        0 of {{ questions|length }} answered
+                    </div>
+                </div>
+                <button type="button"
+                        class="mcq-btn mcq-btn-final-submit"
+                        onclick="confirmFinalSubmit()">
+                    ✓ Submit Phase 1 &amp; Launch CodeTech Compiler →
+                </button>
+            </div>
+
+        </main>
+
+        <!-- Right Area: AI Proctor & Question Palette -->
+        <aside class="mcq-sidebar">
+
+            <!-- Real-Time AI Proctoring Widget -->
+            <div class="proctor-widget-card">
+                <div class="proctor-header">
+                    <h3>🛡️ AI Proctor Live Monitor</h3>
+                    <span class="proctor-live-indicator">
+                        <span class="proctor-live-dot"></span> SECURE
+                    </span>
+                </div>
+
+                <!-- Live Camera Viewport with HUD Canvas Overlay -->
+                <div class="proctor-video-wrap">
+                    <video id="proctorVideo" autoplay playsinline muted></video>
+                    <canvas id="proctorHudCanvas" class="proctor-hud-canvas"></canvas>
+                    <canvas id="proctorOffscreen" width="160" height="120" style="display: none;"></canvas>
+                    <div class="proctor-scanline"></div>
+                </div>
+
+                <!-- Multi-Sensor Metrics Grid -->
+                <div class="proctor-metrics-grid">
+                    <div class="proctor-metric-pill" id="multiFacePill">
+                        <span>👥 Faces:</span>
+                        <strong id="multiFaceText" style="color: #4ade80;">1 Verified</strong>
+                    </div>
+                    <div class="proctor-metric-pill" id="mobileDetectPill">
+                        <span>📱 Phone:</span>
+                        <strong id="mobileDetectText" style="color: #4ade80;">Clear</strong>
+                    </div>
+                    <div class="proctor-metric-pill" id="gazePill">
+                        <span>👀 Gaze:</span>
+                        <strong id="gazeText" style="color: #4ade80;">Focused</strong>
+                    </div>
+                    <div class="proctor-metric-pill" id="cameraPill">
+                        <span>📷 Cam:</span>
+                        <strong id="cameraText" style="color: #4ade80;">Active</strong>
+                    </div>
+                </div>
+
+                <!-- Microphone Noise Level -->
+                <div class="proctor-audio-meter">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>Room Audio Level</span>
+                        <span id="audioLevelText">Quiet</span>
+                    </div>
+                    <div class="proctor-audio-bar-bg">
+                        <div class="proctor-audio-bar-fill" id="audioBarFill"></div>
+                    </div>
+                </div>
+
+                <!-- Proctoring Strikes Counter -->
+                <div class="proctor-strikes-row">
+                    <span>Security Infraction Strikes</span>
+                    <span class="proctor-strikes-count" id="strikeBadge">0 / 3 Strikes</span>
+                </div>
+
+                <!-- Test / Simulation Controls for Evaluators -->
+                <details class="proctor-eval-drawer">
+                    <summary>🧪 Live Proctoring Test Triggers (Click to Test Strikes)</summary>
+                    <div class="proctor-eval-btn-group">
+                        <button type="button" class="proctor-eval-btn" onclick="testTriggerViolation('multiface', '2 Faces Detected in Camera Frame')">
+                            👥 Test Multi-Face
+                        </button>
+                        <button type="button" class="proctor-eval-btn" onclick="testTriggerViolation('mobiledetect', 'Mobile Phone Held in Frame')">
+                            📱 Test Mobile
+                        </button>
+                        <button type="button" class="proctor-eval-btn" onclick="testTriggerViolation('looking_away', 'Candidate Looking Away / Head Turned')">
+                            👀 Test Head Turn
+                        </button>
+                    </div>
+                </details>
+            </div>
+
+            <!-- Question Palette -->
+            <div class="palette-card">
+                <div class="palette-header">
+                    <h3>Question Palette</h3>
+                    <span style="font-size: 12px; font-weight: 700; color: #0284c7;" id="paletteAnsweredCount">
+                        0 / {{ questions|length }} Answered
+                    </span>
+                </div>
+
+                <div class="palette-grid" id="paletteGrid">
+                    {% for q in questions %}
+                    <button type="button"
+                            class="palette-btn {% if answers.get(q.id|string) %}answered{% endif %} {% if loop.first %}active{% endif %}"
+                            id="palBtn_{{ loop.index0 }}"
+                            data-qid="{{ q.id }}"
+                            onclick="jumpQuestion({{ loop.index0 }})">
+                        {{ loop.index }}
+                    </button>
+                    {% endfor %}
+                </div>
+
+                <div class="palette-legend">
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background: #16a34a;"></span>
+                        <span>Answered</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background: #f8fafc; border: 1px solid #cbd5e1;"></span>
+                        <span>Not Answered</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot" style="background: #7e22ce;"></span>
+                        <span>Marked for Review</span>
+                    </div>
+                    <div class="legend-item">
+                        <span class="legend-dot" style="border: 2px solid #0284c7;"></span>
+                        <span>Current</span>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+    </div>
+
+</div>
+
+<!-- Violation Warning Modal -->
+<div class="violation-modal-backdrop" id="violationModal">
+    <div class="violation-modal">
+        <div class="violation-icon">⚠️</div>
+        <div class="violation-title" id="violationTitle">Security Violation Warning</div>
+        <div class="violation-desc" id="violationDesc">An unauthorized activity was detected by the real-time AI proctor.</div>
+        <div class="violation-strike-box" id="violationStrikeBox">Strike 1 of 3 (Disqualification on Strike 3)</div>
+        <button type="button" class="violation-ack-btn" id="violationAckBtn" onclick="dismissViolationModal()">
+            I Understand &amp; Return to Examination
+        </button>
+    </div>
+</div>
+
+<!-- TensorFlow.js & COCO-SSD Neural Network Model for Precision Object & Mobile Detection -->
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.10.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3/dist/coco-ssd.min.js"></script>
+
+<script>
+(function() {
+    'use strict';
+
+    const assessmentId = {{ assessment.id|tojson }};
+    const totalQuestions = {{ questions|length }};
+    const submitUrl = {{ url_for("submit_mcq", assessment_id=assessment.id)|tojson }};
+    const saveUrl = {{ url_for("save_mcq_answer", assessment_id=assessment.id)|tojson }};
+    const proctorLogUrl = {{ url_for("proctor_log")|tojson }};
+    const loginUrl = {{ url_for("login")|tojson }};
+
+    let currentIndex = 0;
+    let remainingSeconds = {{ remaining_seconds|int }};
+    let strikes = 0;
+    const maxStrikes = 3;
+    let isTerminated = false;
+    let isSubmitting = false;
+
+    // COCO-SSD Neural Network State
+    let cocoModel = null;
+    let isCocoModelLoaded = false;
+    let isDetectingObjects = false;
+    let lastPhoneDetection = null;
+
+    // Asynchronously load COCO-SSD MobileNet Neural Detector
+    if (window.cocoSsd) {
+        cocoSsd.load({ base: 'lite_mobilenet_v2' }).then(model => {
+            cocoModel = model;
+            isCocoModelLoaded = true;
+            console.log('CodeTech AI Proctor: Neural Mobile & Object Detector Activated (COCO-SSD).');
+        }).catch(err => {
+            console.warn('COCO-SSD initialization deferred:', err);
+        });
+    }
+
+    // Sets of review question indices
+    const reviewSet = new Set();
+
+    // DOM Elements
+    const timerEl = document.getElementById('timer');
+    const questionCards = Array.from(document.querySelectorAll('.question-card'));
+    const paletteButtons = Array.from(document.querySelectorAll('.palette-btn'));
+    const summaryStatusText = document.getElementById('summaryStatusText');
+    const paletteAnsweredCount = document.getElementById('paletteAnsweredCount');
+    const strikeBadge = document.getElementById('strikeBadge');
+
+    // Proctor Elements
+    const proctorVideo = document.getElementById('proctorVideo');
+    const proctorHudCanvas = document.getElementById('proctorHudCanvas');
+    const proctorOffscreen = document.getElementById('proctorOffscreen');
+    const multiFaceText = document.getElementById('multiFaceText');
+    const multiFacePill = document.getElementById('multiFacePill');
+    const mobileDetectText = document.getElementById('mobileDetectText');
+    const mobileDetectPill = document.getElementById('mobileDetectPill');
+    const gazeText = document.getElementById('gazeText');
+    const gazePill = document.getElementById('gazePill');
+    const cameraText = document.getElementById('cameraText');
+    const cameraPill = document.getElementById('cameraPill');
+    const audioLevelText = document.getElementById('audioLevelText');
+    const audioBarFill = document.getElementById('audioBarFill');
+
+    // ============================================================
+    // 1. COUNTDOWN TIMER
+    // ============================================================
+    function formatTime(sec) {
+        sec = Math.max(0, sec);
+        const m = Math.floor(sec / 60).toString().padStart(2, '0');
+        const s = (sec % 60).toString().padStart(2, '0');
+        return m + ':' + s;
+    }
+
+    function updateTimer() {
+        if (isTerminated) return;
+        timerEl.textContent = formatTime(remainingSeconds);
+        timerEl.classList.toggle('danger', remainingSeconds <= 300);
+        if (remainingSeconds <= 0) {
+            clearInterval(timerInterval);
+            isSubmitting = true;
+            alert('Theory examination time has expired! Auto-submitting and advancing to CodeTech coding lab.');
+            window.location.href = submitUrl;
+            return;
+        }
+        remainingSeconds--;
+    }
+    updateTimer();
+    const timerInterval = setInterval(updateTimer, 1000);
+
+    // ============================================================
+    // 2. QUESTION NAVIGATION & PALETTE
+    // ============================================================
+    window.jumpQuestion = function(targetIdx) {
+        if (targetIdx < 0 || targetIdx >= totalQuestions) return;
+
+        saveCurrentQuestion(currentIndex);
+
+        questionCards[currentIndex].classList.add('hidden-question');
+        paletteButtons[currentIndex].classList.remove('active');
+
+        currentIndex = targetIdx;
+        questionCards[currentIndex].classList.remove('hidden-question');
+        paletteButtons[currentIndex].classList.add('active');
+
+        const revBtn = document.getElementById('reviewBtn_' + currentIndex);
+        if (revBtn) {
+            if (reviewSet.has(currentIndex)) {
+                revBtn.classList.add('active');
+                revBtn.textContent = '★ Marked for Review';
+            } else {
+                revBtn.classList.remove('active');
+                revBtn.textContent = '🔖 Mark for Review';
+            }
+        }
+
+        updatePaletteCounters();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    window.toggleReview = function(idx) {
+        const revBtn = document.getElementById('reviewBtn_' + idx);
+        const palBtn = document.getElementById('palBtn_' + idx);
+        if (reviewSet.has(idx)) {
+            reviewSet.delete(idx);
+            if (revBtn) {
+                revBtn.classList.remove('active');
+                revBtn.textContent = '🔖 Mark for Review';
+            }
+            if (palBtn) palBtn.classList.remove('review');
+        } else {
+            reviewSet.add(idx);
+            if (revBtn) {
+                revBtn.classList.add('active');
+                revBtn.textContent = '★ Marked for Review';
+            }
+            if (palBtn) palBtn.classList.add('review');
+        }
+        updatePaletteCounters();
+    };
+
+    window.clearSelection = function(idx) {
+        const card = questionCards[idx];
+        const selectedRadio = card.querySelector('input[type="radio"]:checked');
+        if (selectedRadio) {
+            selectedRadio.checked = false;
+        }
+        card.querySelectorAll('.mcq-opt-label').forEach(lbl => lbl.classList.remove('selected'));
+
+        const palBtn = document.getElementById('palBtn_' + idx);
+        if (palBtn) palBtn.classList.remove('answered');
+
+        const qid = card.dataset.qid;
+        const body = new URLSearchParams({ question_id: qid, selected_answer: 'CLEAR' });
+        fetch(saveUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body.toString()
+        }).catch(() => {});
+
+        updatePaletteCounters();
+    };
+
+    document.querySelectorAll('.mcq-opt-label input[type="radio"]').forEach(radio => {
+        radio.addEventListener('change', function() {
+            const card = this.closest('.question-card');
+            const idx = parseInt(card.dataset.index, 10);
+            card.querySelectorAll('.mcq-opt-label').forEach(lbl => lbl.classList.remove('selected'));
+            this.closest('.mcq-opt-label').classList.add('selected');
+
+            const palBtn = document.getElementById('palBtn_' + idx);
+            if (palBtn) palBtn.classList.add('answered');
+
+            saveCurrentQuestion(idx);
+            updatePaletteCounters();
+        });
+    });
+
+    function saveCurrentQuestion(idx) {
+        const card = questionCards[idx];
+        const selectedRadio = card.querySelector('input[type="radio"]:checked');
+        if (!selectedRadio) return;
+
+        const qid = card.dataset.qid;
+        const val = selectedRadio.value;
+        const body = new URLSearchParams({ question_id: qid, selected_answer: val });
+
+        fetch(saveUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: body.toString(),
+            keepalive: true
+        }).catch(() => {});
+    }
+
+    function updatePaletteCounters() {
+        let answeredCount = 0;
+        questionCards.forEach(c => {
+            if (c.querySelector('input[type="radio"]:checked')) answeredCount++;
+        });
+        const summaryStr = answeredCount + ' of ' + totalQuestions + ' answered (' + (totalQuestions - answeredCount) + ' unanswered, ' + reviewSet.size + ' review)';
+        if (summaryStatusText) summaryStatusText.textContent = summaryStr;
+        if (paletteAnsweredCount) paletteAnsweredCount.textContent = answeredCount + ' / ' + totalQuestions + ' Answered';
+    }
+    updatePaletteCounters();
+
+    window.saveCurrentAndConfirmSubmit = function() {
+        saveCurrentQuestion(currentIndex);
+        confirmFinalSubmit();
+    };
+
+    window.confirmFinalSubmit = function() {
+        let answeredCount = 0;
+        questionCards.forEach(c => {
+            if (c.querySelector('input[type="radio"]:checked')) answeredCount++;
+        });
+        const unanswered = totalQuestions - answeredCount;
+        let msg = 'Submit Phase 1 Theory Examination and proceed to Phase 2 CodeTech Compiler?\n\n' +
+                  '• Total Questions: ' + totalQuestions + '\n' +
+                  '• Answered: ' + answeredCount + '\n' +
+                  '• Unanswered: ' + unanswered + '\n' +
+                  '• Marked for Review: ' + reviewSet.size + '\n\n' +
+                  'Once submitted, your theory responses cannot be changed.';
+        if (confirm(msg)) {
+            isSubmitting = true;
+            window.location.href = submitUrl;
+        }
+    };
+
+    // ============================================================
+    // 3. REAL-TIME MULTI-SENSOR AI PROCTORING ENGINE
+    //    - Multi-Face Detecting
+    //    - Mobile Phone Detecting
+    //    - Head Turn / Looking Away Detecting
+    //    - Camera Block & Audio Noise Monitoring
+    // ============================================================
+    let streamActive = false;
+    let consecutiveDarkFrames = 0;
+    let consecutiveLookingAway = 0;
+    let consecutiveMobileFrames = 0;
+    let nativeFaceDetector = null;
+
+    if ('FaceDetector' in window) {
+        try {
+            nativeFaceDetector = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 5 });
+        } catch(e) {}
+    }
+
+    // Audio Alarm Sound
+    function playSecurityBeep() {
+        try {
+            const ctx = new (window.AudioContext || window.webkitAudioContext)();
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(800, ctx.currentTime);
+            osc.frequency.setValueAtTime(400, ctx.currentTime + 0.12);
+            osc.frequency.setValueAtTime(800, ctx.currentTime + 0.25);
+            gain.gain.setValueAtTime(0.3, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.4);
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.start();
+            osc.stop(ctx.currentTime + 0.4);
+        } catch(e) {}
+    }
+
+    // WebRTC Media Acquisition
+    async function initProctorMedia() {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({
+                video: { width: { ideal: 320 }, height: { ideal: 240 } },
+                audio: true
+            });
+            proctorVideo.srcObject = stream;
+            streamActive = true;
+            cameraText.textContent = 'Active';
+            cameraText.style.color = '#4ade80';
+
+            initAudioAnalyzer(stream);
+        } catch (err) {
+            cameraText.textContent = 'Blocked';
+            cameraText.style.color = '#ef4444';
+            cameraPill.classList.add('alert');
+            recordProctorViolation('camerablock', 'Camera access was denied or device is not transmitting.');
+        }
+    }
+    initProctorMedia();
+
+    // Audio Meter
+    function initAudioAnalyzer(stream) {
+        try {
+            const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            const source = audioCtx.createMediaStreamSource(stream);
+            const analyser = audioCtx.createAnalyser();
+            analyser.fftSize = 64;
+            source.connect(analyser);
+
+            const dataArray = new Uint8Array(analyser.frequencyBinCount);
+            function monitorVolume() {
+                if (isTerminated) return;
+                analyser.getByteFrequencyData(dataArray);
+                let sum = 0;
+                for (let i = 0; i < dataArray.length; i++) sum += dataArray[i];
+                const avg = sum / dataArray.length;
+                const pct = Math.min(100, Math.round((avg / 128) * 100));
+
+                if (audioBarFill) audioBarFill.style.width = pct + '%';
+                if (pct > 55) {
+                    if (audioLevelText) { audioLevelText.textContent = 'Voice / Noise'; audioLevelText.style.color = '#f87171'; }
+                    if (audioBarFill) audioBarFill.style.backgroundColor = '#ef4444';
+                } else {
+                    if (audioLevelText) { audioLevelText.textContent = 'Quiet'; audioLevelText.style.color = '#94a3b8'; }
+                    if (audioBarFill) audioBarFill.style.backgroundColor = '#22c55e';
+                }
+                requestAnimationFrame(monitorVolume);
+            }
+            monitorVolume();
+        } catch(e) {}
+    }
+
+    // Main Vision Analysis Loop (Multi-Face, Mobile, Head Turn, Camera Block)
+    async function analyzeProctorFrame() {
+        if (!streamActive || isTerminated || proctorVideo.videoWidth === 0) return;
+
+        const W = 160;
+        const H = 120;
+        const ctxOff = proctorOffscreen.getContext('2d');
+        ctxOff.drawImage(proctorVideo, 0, 0, W, H);
+        const imgData = ctxOff.getImageData(0, 0, W, H);
+        const pixels = imgData.data;
+
+        // Setup HUD canvas
+        proctorHudCanvas.width = proctorVideo.videoWidth || 320;
+        proctorHudCanvas.height = proctorVideo.videoHeight || 240;
+        const hud = proctorHudCanvas.getContext('2d');
+        hud.clearRect(0, 0, proctorHudCanvas.width, proctorHudCanvas.height);
+        const scaleX = proctorHudCanvas.width / W;
+        const scaleY = proctorHudCanvas.height / H;
+
+        // ==========================================
+        // SENSOR 1: CAMERA BLOCK DETECTION
+        // ==========================================
+        let totalLum = 0;
+        const totalPixels = W * H;
+        for (let i = 0; i < pixels.length; i += 4) {
+            totalLum += (0.299 * pixels[i] + 0.587 * pixels[i+1] + 0.114 * pixels[i+2]);
+        }
+        const meanLum = totalLum / totalPixels;
+
+        if (meanLum < 12) {
+            consecutiveDarkFrames++;
+            if (consecutiveDarkFrames >= 3) {
+                cameraText.textContent = 'BLOCKED!';
+                cameraText.style.color = '#ef4444';
+                cameraPill.classList.add('alert');
+                recordProctorViolation('camerablock', 'Camera lens is covered, obstructed, or dark.');
+                consecutiveDarkFrames = 0;
+            }
+        } else {
+            consecutiveDarkFrames = 0;
+            cameraText.textContent = 'Active';
+            cameraText.style.color = '#4ade80';
+            cameraPill.classList.remove('alert');
+        }
+
+        // ==========================================
+        // SENSOR 2 & 3: MULTI-FACE & HEAD TURN (GAZE)
+        // ==========================================
+        let facesDetected = [];
+        let isFaceDetected = false;
+
+        if (nativeFaceDetector) {
+            try {
+                facesDetected = await nativeFaceDetector.detect(proctorVideo);
+            } catch(e) {}
+        }
+
+        if (facesDetected && facesDetected.length > 0) {
+            isFaceDetected = true;
+
+            // Draw HUD bounding boxes
+            facesDetected.forEach((face, idx) => {
+                const b = face.boundingBox;
+                hud.lineWidth = 2;
+                hud.strokeStyle = facesDetected.length > 1 ? '#ef4444' : '#22c55e';
+                hud.strokeRect(b.left, b.top, b.width, b.height);
+
+                hud.fillStyle = facesDetected.length > 1 ? '#ef4444' : '#22c55e';
+                hud.font = '11px sans-serif';
+                hud.fillText(facesDetected.length > 1 ? `🚨 Face #${idx + 1}` : '✓ Verified Candidate', b.left + 4, b.top - 6);
+            });
+
+            // MULTI-FACE TRIGGER
+            if (facesDetected.length >= 2) {
+                multiFaceText.textContent = `${facesDetected.length} FACES!`;
+                multiFaceText.style.color = '#ef4444';
+                multiFacePill.classList.add('alert');
+                recordProctorViolation('multiface', `Multi-face violation: ${facesDetected.length} persons detected in exam frame!`);
+            } else {
+                multiFaceText.textContent = '1 Verified';
+                multiFaceText.style.color = '#4ade80';
+                multiFacePill.classList.remove('alert');
+
+                // HEAD POSE / LOOKING AWAY TRIGGER
+                const f = facesDetected[0].boundingBox;
+                const vW = proctorHudCanvas.width;
+                const vH = proctorHudCanvas.height;
+                const centerX = (f.left + f.width / 2) / vW;
+                const centerY = (f.top + f.height / 2) / vH;
+                const ratio = f.width / f.height;
+
+                // Candidate turns head left / right / down
+                const isLookingAway = (centerX < 0.20 || centerX > 0.80 || centerY > 0.78 || ratio < 0.52);
+                if (isLookingAway) {
+                    consecutiveLookingAway++;
+                    gazeText.textContent = 'LOOKING AWAY!';
+                    gazeText.style.color = '#f59e0b';
+                    gazePill.classList.add('alert');
+
+                    // Draw alert box on HUD
+                    hud.strokeStyle = '#f59e0b';
+                    hud.lineWidth = 3;
+                    hud.strokeRect(f.left, f.top, f.width, f.height);
+                    hud.fillStyle = '#f59e0b';
+                    hud.fillText('⚠️ LOOKING AWAY / HEAD TURNED', f.left, f.top + f.height + 14);
+
+                    if (consecutiveLookingAway >= 4) {
+                        recordProctorViolation('looking_away', 'Candidate deflected gaze or turned head away from exam window.');
+                        consecutiveLookingAway = 0;
+                    }
+                } else {
+                    consecutiveLookingAway = 0;
+                    gazeText.textContent = 'Focused';
+                    gazeText.style.color = '#4ade80';
+                    gazePill.classList.remove('alert');
+                }
+            }
+        } else {
+            // Fallback Computer Vision Contour Analysis (when Native FaceDetector is unavailable)
+            let skinPoints = [];
+            let skinCount = 0;
+            for (let y = 0; y < H; y++) {
+                for (let x = 0; x < W; x++) {
+                    const idx = (y * W + x) * 4;
+                    const r = pixels[idx], g = pixels[idx+1], b = pixels[idx+2];
+                    if (r > 95 && g > 45 && b > 25 && (r - g) > 12 && r > b) {
+                        skinPoints.push({ x, y });
+                        skinCount++;
+                    }
+                }
+            }
+
+            if (skinCount > 250) {
+                isFaceDetected = true;
+                // Calculate centroid
+                let sumX = 0, sumY = 0;
+                skinPoints.forEach(p => { sumX += p.x; sumY += p.y; });
+                const meanX = sumX / skinPoints.length;
+                const meanY = sumY / skinPoints.length;
+                const normX = meanX / W;
+
+                // Check for 2 distinct face clusters on left and right
+                let leftFaces = skinPoints.filter(p => p.x < W * 0.45).length;
+                let rightFaces = skinPoints.filter(p => p.x > W * 0.55).length;
+
+                if (leftFaces > 300 && rightFaces > 300) {
+                    multiFaceText.textContent = 'MULTI-FACE!';
+                    multiFaceText.style.color = '#ef4444';
+                    multiFacePill.classList.add('alert');
+                    hud.strokeStyle = '#ef4444';
+                    hud.strokeRect(10, 20, 100, 120);
+                    hud.strokeRect(W * scaleX - 110, 20, 100, 120);
+                    hud.fillStyle = '#ef4444';
+                    hud.fillText('🚨 MULTI-FACE DETECTED', 20, 15);
+                    recordProctorViolation('multiface', 'Multiple individuals detected in examination frame.');
+                } else {
+                    multiFaceText.textContent = '1 Verified';
+                    multiFaceText.style.color = '#4ade80';
+                    multiFacePill.classList.remove('alert');
+
+                    // Check head turn / leaning off screen
+                    if (normX < 0.20 || normX > 0.80 || (meanY / H) > 0.78) {
+                        consecutiveLookingAway++;
+                        gazeText.textContent = 'LOOKING AWAY!';
+                        gazeText.style.color = '#f59e0b';
+                        gazePill.classList.add('alert');
+                        if (consecutiveLookingAway >= 4) {
+                            recordProctorViolation('looking_away', 'Candidate gaze deflected away from examination screen.');
+                            consecutiveLookingAway = 0;
+                        }
+                    } else {
+                        consecutiveLookingAway = 0;
+                        gazeText.textContent = 'Focused';
+                        gazeText.style.color = '#4ade80';
+                        gazePill.classList.remove('alert');
+                    }
+                }
+            } else {
+                gazeText.textContent = 'No Face';
+                gazeText.style.color = '#94a3b8';
+            }
+        }
+
+        // ==========================================
+        // SENSOR 4: NEURAL MOBILE PHONE DETECTION (COCO-SSD)
+        // ==========================================
+        // Real-time deep learning object detection for mobile phones.
+        // Replaces error-prone pixel heuristics so dark shirts, hair, and shadows never cause false strikes.
+        if (cocoModel && !isDetectingObjects && proctorVideo.readyState >= 2) {
+            isDetectingObjects = true;
+            cocoModel.detect(proctorVideo).then(predictions => {
+                const phone = predictions.find(p => (p.class === 'cell phone' || p.class === 'remote') && p.score >= 0.58);
+                if (phone) {
+                    lastPhoneDetection = {
+                        x: phone.bbox[0],
+                        y: phone.bbox[1],
+                        w: phone.bbox[2],
+                        h: phone.bbox[3],
+                        score: Math.round(phone.score * 100)
+                    };
+                    consecutiveMobileFrames++;
+                } else {
+                    consecutiveMobileFrames = Math.max(0, consecutiveMobileFrames - 1);
+                    if (consecutiveMobileFrames === 0) {
+                        lastPhoneDetection = null;
+                    }
+                }
+
+                // Deep learning multi-person detection confirmation
+                const persons = predictions.filter(p => p.class === 'person' && p.score >= 0.55);
+                if (persons.length >= 2 && (!facesDetected || facesDetected.length < 2)) {
+                    multiFaceText.textContent = `${persons.length} PERSONS!`;
+                    multiFaceText.style.color = '#ef4444';
+                    multiFacePill.classList.add('alert');
+                    recordProctorViolation('multiface', `Multi-person violation: ${persons.length} individuals in workspace!`);
+                }
+            }).catch(() => {}).finally(() => {
+                isDetectingObjects = false;
+            });
+        }
+
+        // Render phone detection state on HUD and status badges
+        if (consecutiveMobileFrames > 0 && lastPhoneDetection) {
+            mobileDetectText.textContent = 'DETECTED!';
+            mobileDetectText.style.color = '#ef4444';
+            mobileDetectPill.classList.add('alert');
+
+            // Draw HUD Phone Detection Bounding Box
+            hud.strokeStyle = '#ef4444';
+            hud.lineWidth = 3;
+            hud.strokeRect(lastPhoneDetection.x, lastPhoneDetection.y, lastPhoneDetection.w, lastPhoneDetection.h);
+            hud.fillStyle = '#ef4444';
+            hud.font = 'bold 12px sans-serif';
+            hud.fillText(`📱 MOBILE DETECTED (${lastPhoneDetection.score}%)`, lastPhoneDetection.x, Math.max(14, lastPhoneDetection.y - 6));
+
+            if (consecutiveMobileFrames >= 3) {
+                recordProctorViolation('mobiledetect', 'Mobile phone or unauthorized electronic device detected in frame!');
+                consecutiveMobileFrames = 0;
+                lastPhoneDetection = null;
+            }
+        } else {
+            mobileDetectText.textContent = isCocoModelLoaded ? 'Clear' : 'Active';
+            mobileDetectText.style.color = '#4ade80';
+            mobileDetectPill.classList.remove('alert');
+        }
+    }
+    setInterval(analyzeProctorFrame, 1000);
+
+    // Tab Switch & Window Focus Monitoring
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden && !isSubmitting && !isTerminated) {
+            recordProctorViolation('tabswitch', 'Student navigated away from examination tab or minimized window.');
+        }
+    });
+
+    window.addEventListener('blur', function() {
+        if (!isSubmitting && !isTerminated) {
+            recordProctorViolation('tabswitch', 'Student switched focus away from assessment interface.');
+        }
+    });
+
+    // Anti-Cheating Key & Context Locks
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('copy', e => e.preventDefault());
+    document.addEventListener('cut', e => e.preventDefault());
+    document.addEventListener('paste', e => e.preventDefault());
+    document.addEventListener('keydown', function(e) {
+        const k = e.key.toLowerCase();
+        if ((e.ctrlKey || e.metaKey) && ['c','v','x','a','s','p','r','u'].includes(k)) e.preventDefault();
+        if (e.key === 'F5' || e.key === 'F12' || (e.ctrlKey && e.shiftKey && ['i','j','c'].includes(k))) e.preventDefault();
+    });
+
+    // ============================================================
+    // 4. STRIKE LOGGING & 3-STRIKE DISQUALIFICATION
+    // ============================================================
+    let lastViolationTime = 0;
+    async function recordProctorViolation(type, details) {
+        if (isTerminated || isSubmitting) return;
+
+        // Throttle repeated warnings to minimum 5 seconds apart
+        const now = Date.now();
+        if (now - lastViolationTime < 5000) return;
+        lastViolationTime = now;
+
+        // Play audible alarm beep
+        playSecurityBeep();
+
+        try {
+            const form = new URLSearchParams({ type: type, details: details, assessment_id: assessmentId });
+            const resp = await fetch(proctorLogUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: form.toString()
+            });
+            const data = await resp.json();
+
+            strikes = data.strike_count || (strikes + 1);
+            if (strikeBadge) {
+                strikeBadge.textContent = strikes + ' / ' + maxStrikes + ' Strikes';
+                if (strikes > 0) strikeBadge.classList.add('danger');
+            }
+
+            if (data.disqualified || strikes >= maxStrikes) {
+                isTerminated = true;
+                clearInterval(timerInterval);
+                showDisqualificationNotice(details);
+            } else {
+                showViolationModal(type, details, strikes);
+            }
+        } catch(e) {
+            strikes++;
+            if (strikeBadge) {
+                strikeBadge.textContent = strikes + ' / ' + maxStrikes + ' Strikes';
+                if (strikes > 0) strikeBadge.classList.add('danger');
+            }
+            if (strikes >= maxStrikes) {
+                isTerminated = true;
+                clearInterval(timerInterval);
+                showDisqualificationNotice(details);
+            } else {
+                showViolationModal(type, details, strikes);
+            }
+        }
+    }
+
+    // Evaluator Test Simulation Helper
+    window.testTriggerViolation = function(type, desc) {
+        recordProctorViolation(type, desc);
+    };
+
+    function showViolationModal(type, details, strikeNum) {
+        const modal = document.getElementById('violationModal');
+        const desc = document.getElementById('violationDesc');
+        const strikeBox = document.getElementById('violationStrikeBox');
+        if (!modal) return;
+
+        const typeLabels = {
+            'camerablock': 'Camera Block / Obstruction Detected',
+            'multiface': 'Multiple Faces Detected in Exam Frame',
+            'mobiledetect': 'Mobile Phone / Electronic Device Detected',
+            'looking_away': 'Candidate Looking Away / Head Turned Away',
+            'tabswitch': 'Browser Tab Switch / Window Blur Detected',
+            'audio_noise': 'Excessive Noise / Conversation Detected'
+        };
+
+        document.getElementById('violationTitle').textContent = typeLabels[type] || 'Security Anomaly Detected';
+        desc.textContent = details + ' Real-time AI Proctor enforces continuous central gaze, single-candidate presence, and device restriction.';
+        strikeBox.textContent = 'Warning Strike ' + strikeNum + ' of ' + maxStrikes + ' (Disqualification on Strike 3)';
+        modal.classList.add('show');
+    }
+
+    window.dismissViolationModal = function() {
+        const modal = document.getElementById('violationModal');
+        if (modal) modal.classList.remove('show');
+    };
+
+    function showDisqualificationNotice(details) {
+        document.body.innerHTML = `
+            <div style="max-width: 600px; margin: 100px auto; padding: 40px; background: #ffffff; border-radius: 16px; text-align: center; font-family: -apple-system, BlinkMacSystemFont, Arial, sans-serif; box-shadow: 0 10px 40px rgba(0,0,0,0.15);">
+                <div style="font-size: 54px; margin-bottom: 12px;">🚫</div>
+                <h1 style="color: #dc2626; font-size: 24px; margin-bottom: 8px;">Examination Disqualified</h1>
+                <p style="color: #475569; font-size: 15px; line-height: 1.6; margin-bottom: 24px;">
+                    Your assessment attempt has been automatically terminated due to exceeding the maximum security infraction limit (3/3 strikes).
+                </p>
+                <div style="background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; padding: 14px; text-align: left; font-size: 13px; color: #991b1b; margin-bottom: 24px;">
+                    <strong>Violation Details:</strong> ${details}<br>
+                    <strong>Timestamp:</strong> ${new Date().toLocaleString()}<br>
+                    <strong>Institutional Status:</strong> Disqualified by CodeTech AI Proctor (MIT Meerut / AKTU)
+                </div>
+                <a href="${loginUrl}" style="display: inline-block; background: #0f172a; color: #ffffff; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-weight: 700;">
+                    Return to ERP Login
+                </a>
+            </div>
+        `;
+    }
+
+})();
+</script>
+{% endblock %}

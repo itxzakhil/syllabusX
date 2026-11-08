@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Assessment Result — SyllabusX{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <div class="assessment-card">
+
+        <div class="assessment-header">
+
+            <div>
+
+                <h1>MCQ Assessment Completed</h1>
+
+                <p>
+                    Your MCQ section has been successfully submitted.
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <div class="success-box">
+
+            <h2>
+                MCQ Section Completed
+            </h2>
+
+            <p>
+                Your answers have been recorded successfully.
+            </p>
+
+            <p>
+                You may now continue to the coding section.
+            </p>
+
+        </div>
+
+
+        <div class="assessment-info">
+
+            <h2>Assessment Status</h2>
+
+            <p>
+                <strong>Course:</strong>
+                {{ assessment.course_name }}
+            </p>
+
+            <p>
+                <strong>MCQ Section:</strong>
+                Completed
+            </p>
+
+            <p>
+                <strong>Coding Section:</strong>
+                Next
+            </p>
+
+            <p>
+                <strong>Coding Time:</strong>
+                {{ assessment.coding_duration_minutes }} minutes
+            </p>
+
+        </div>
+
+
+        <div class="important-note">
+
+            <strong>Important:</strong>
+
+            Your score and complete assessment result are available only to the college administrator/teacher.
+
+        </div>
+
+
+        <div class="button-row">
+
+            <button
+                type="button"
+                class="btn btn-primary"
+                onclick="alert('Coding assessment will be connected in Phase 3.')"
+            >
+                Continue to Coding Assessment →
+            </button>
+
+        </div>
+
+
+    </div>
+
+</div>
+
+{% endblock %}

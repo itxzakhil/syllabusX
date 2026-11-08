@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block title %}Course Instructions — SyllabusX{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <div class="assessment-card">
+
+        <!-- Header -->
+        <div class="assessment-header">
+
+            <div>
+                <h1>{{ assessment["course_name"] }} Assessment</h1>
+                <p>
+                    Please read the course-specific instructions
+                    before beginning the assessment.
+                </p>
+            </div>
+
+        </div>
+
+
+        <!-- Course Information -->
+        <div class="course-info">
+
+            <div class="course-info-grid">
+
+                <div>
+                    <span>Course</span>
+                    <strong>{{ assessment["course_name"] }}</strong>
+                </div>
+
+                <div>
+                    <span>Course Code</span>
+                    <strong>{{ assessment["course_code"] }}</strong>
+                </div>
+
+                <div>
+                    <span>MCQ Duration</span>
+                    <strong>
+                        {{ assessment["mcq_duration_minutes"] }} Minutes
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Coding Duration</span>
+                    <strong>
+                        {{ assessment["coding_duration_minutes"] }} Minutes
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <!-- Course Instructions -->
+        <h2>Course Instructions</h2>
+
+        <div class="course-instructions">
+
+            {% for instruction in assessment["course_instructions"].split('\n') %}
+
+                {% if instruction.strip() %}
+
+                    <div class="course-instruction-line">
+                        {{ instruction }}
+                    </div>
+
+                {% endif %}
+
+            {% endfor %}
+
+        </div>
+
+
+        <!-- Before You Start -->
+        <div class="notice-card">
+
+            <h3>⚠ Before You Start</h3>
+
+            <ul>
+
+                <li>
+                    Make sure you are ready before starting.
+                </li>
+
+                <li>
+                    Once the assessment begins, the timer will start.
+                </li>
+
+                <li>
+                    Do not refresh or close the browser during
+                    the assessment.
+                </li>
+
+                <li>
+                    Make sure your internet connection is stable.
+                </li>
+
+                <li>
+                    Read each question carefully.
+                </li>
+
+            </ul>
+
+        </div>
+
+
+        <!-- Buttons -->
+        <div class="assessment-action">
+
+           <a
+                href="{{ url_for('mcq_assessment', assessment_id=assessment.id) }}"
+                class="btn btn-primary"
+            >
+                Start MCQ Assessment →
+            </a>
+
+            <a
+                href="{{ url_for('course_selection') }}"
+                class="btn btn-secondary"
+            >
+                ← Change Course
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

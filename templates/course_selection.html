@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Course Selection — SyllabusX{% endblock %}
+
+{% block content %}
+
+<div class="page-container">
+
+    <!-- College Institutional Banner -->
+    <div class="college-badge-banner">
+        <div class="college-crest-icon">🏛️</div>
+        <div class="college-info">
+            <h2>Meerut Institute of Technology</h2>
+            <p>SyllabusX • Intelligent Syllabus-Based Examination Ecosystem</p>
+            <span class="college-tagline">CodeTech Automated Lab Examination System • Academic Session 2026-27</span>
+        </div>
+    </div>
+
+    <div class="assessment-card">
+
+        <!-- Header -->
+        <div class="assessment-header">
+            <div>
+                <h1>Select Syllabus Assessment Course</h1>
+                <p>
+                    Each assessment combines 20 MCQs and 3 Coding Challenges, mapped to syllabus units, topics, and targeted technical competencies.
+                </p>
+            </div>
+        </div>
+
+        <!-- Course Selection Form -->
+        <form method="POST">
+
+            <div class="course-grid">
+
+                {% for course in courses %}
+
+                <div class="course-card">
+
+                    <input
+                        type="radio"
+                        name="course_id"
+                        value="{{ course['id'] }}"
+                        id="course_{{ course['id'] }}"
+                        required
+                    >
+
+                    <label
+                        for="course_{{ course['id'] }}"
+                        class="course-label"
+                    >
+
+                        <div class="course-top">
+
+                            <div class="course-icon">
+                                {% if course['code'] == 'PYTHON' %}
+                                    🐍
+                                {% elif course['code'] == 'C' %}
+                                    ⚙️
+                                {% elif course['code'] == 'JAVA' %}
+                                    ☕
+                                {% else %}
+                                    📚
+                                {% endif %}
+                            </div>
+
+                            <div class="course-select">
+                                <span class="radio-circle"></span>
+                            </div>
+
+                        </div>
+
+                        <h3>{{ course['name'] }}</h3>
+
+                        <p>
+                            <strong>Course Code:</strong>
+                            {{ course['code'] }}
+                        </p>
+
+                        <p>
+                            {{ course['description'] }}
+                        </p>
+
+                        <div class="course-duration">
+
+                            <span>
+                                ⏱ MCQ:
+                                {{ course['mcq_duration_minutes'] }} mins
+                            </span>
+
+                            <span>
+                                💻 Coding:
+                                {{ course['coding_duration_minutes'] }} mins
+                            </span>
+
+                        </div>
+
+                    </label>
+
+                </div>
+
+                {% endfor %}
+
+            </div>
+
+            <!-- Buttons -->
+            <div class="assessment-action">
+
+                <button
+                    type="submit"
+                    class="btn btn-primary"
+                >
+                    Continue to Assessment Instructions →
+                </button>
+
+                <a
+                    href="{{ url_for('student_dashboard') }}"
+                    class="btn btn-secondary"
+                >
+                    Back to Dashboard
+                </a>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

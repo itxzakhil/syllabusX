@@ -1,0 +1,70 @@
+COLLEGE ASSESSMENT - EMAIL + MOBILE VERIFICATION SETUP
+
+1. Replace app.py in your project with the app.py from this package.
+2. Replace templates/register.html.
+3. Add templates/verify_registration.html.
+4. Keep your existing assessment templates and database/assessment.db.
+
+The database migration is automatic. Existing students are treated as already
+verified so their accounts continue to work. New students must verify BOTH
+email and mobile before their student account is created.
+
+EMAIL (SMTP)
+------------
+The application sends a 6-digit OTP through SMTP.
+For Gmail, use smtp.gmail.com, port 587, TLS, and a Google App Password.
+Do NOT put your normal Gmail password in the application.
+
+Set these Windows environment variables in the same CMD window before starting:
+
+set SMTP_HOST=smtp.gmail.com
+set SMTP_PORT=587
+set SMTP_USERNAME=your-email@gmail.com
+set SMTP_PASSWORD=YOUR_GOOGLE_APP_PASSWORD
+set SMTP_FROM=your-email@gmail.com
+set SMTP_USE_SSL=0
+
+MOBILE (DEVELOPMENT CONSOLE MODE)
+---------------------------------
+No SMS provider is required during local development. The application generates a
+separate 6-digit mobile OTP and prints it in the Flask server CMD/terminal.
+
+Example:
+============================================================
+ MOBILE VERIFICATION OTP (DEVELOPMENT MODE)
+ Mobile: +919876543210
+ OTP: 583214
+ Expires in: 10 minutes
+============================================================
+
+Use that OTP on the verification page. No Twilio account or SMS charges are
+required for this development mode.
+
+Then start the application:
+
+python app.py
+
+REGISTRATION FLOW
+-----------------
+Student enters:
+- Full name
+- Roll number
+- College email
+- Mobile number
+- Password
+- Confirm password
+
+The server creates a temporary pending registration and sends two different OTPs.
+The student must enter BOTH codes.
+Only after both codes are correct is the real students row created.
+The password is stored only as a password hash; it is never placed in the browser
+session.
+
+OTP expires after 10 minutes by default and resend is limited to once every 60
+seconds. Up to 10 incorrect verification attempts are allowed.
+
+IMPORTANT
+---------
+Real email delivery requires valid SMTP credentials. Mobile verification is
+console-only in this development build, so Twilio credentials are not required.
+Do not expose SMTP credentials in a public repository.

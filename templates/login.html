@@ -1,0 +1,702 @@
+{% extends "base.html" %}
+
+{% block title %}
+SyllabusX Login — MIT Meerut
+{% endblock %}
+
+{% block content %}
+<style>
+.auth-page {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: calc(100vh - 220px);
+    padding: 30px 16px;
+    background: #f1f5f9;
+}
+
+.auth-card-prod {
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    padding: 36px 32px;
+    max-width: 520px;
+    width: 100%;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
+}
+
+.auth-header {
+    text-align: center;
+    margin-bottom: 22px;
+}
+
+.auth-header h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: #0f172a;
+    margin: 8px 0 4px 0;
+}
+
+.auth-notice-strip {
+    background: #fefce8;
+    border: 1px solid #fef08a;
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-bottom: 20px;
+    font-size: 12px;
+    color: #854d0e;
+    line-height: 1.5;
+}
+
+.auth-mode-selector {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: #e2e8f0;
+    padding: 4px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.auth-mode-btn {
+    border: 0;
+    background: transparent;
+    padding: 9px 4px;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+}
+
+.auth-mode-btn.active {
+    background: #0f172a;
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.18);
+}
+
+.portal-tabs-3 {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 6px;
+    background: #f1f5f9;
+    padding: 4px;
+    border-radius: 10px;
+    margin-bottom: 22px;
+}
+
+.portal-tab-3 {
+    border: 0;
+    background: transparent;
+    padding: 9px 4px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    color: #64748b;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+}
+
+.portal-tab-3.active {
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+}
+
+.form-group {
+    margin-bottom: 18px;
+}
+
+.form-group label {
+    display: block;
+    font-size: 13px;
+    font-weight: 700;
+    color: #334155;
+    margin-bottom: 6px;
+}
+
+.form-group input, .form-group select {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    color: #0f172a;
+    box-sizing: border-box;
+    transition: border-color 0.15s;
+    background: #ffffff;
+}
+
+.form-group input:focus, .form-group select:focus {
+    border-color: #0284c7;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.12);
+}
+
+.btn-auth-submit {
+    width: 100%;
+    border: 0;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 15px;
+    font-weight: 700;
+    color: #ffffff;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    margin-top: 6px;
+}
+
+.btn-auth-submit:hover {
+    opacity: 0.92;
+}
+
+.campus-otp-badge {
+    background: #ecfdf5;
+    border: 1px solid #a7f3d0;
+    border-radius: 8px;
+    padding: 12px;
+    margin: 14px 0;
+    text-align: center;
+    color: #065f46;
+}
+</style>
+
+<div class="auth-page">
+
+    <div class="auth-card-prod">
+
+        <!-- Portal Header -->
+        <div class="auth-header">
+            <span class="portal-badge">SYLLABUSX PORTAL</span>
+            <h1>SyllabusX Portal Login</h1>
+            <p style="font-size: 13px; color: #64748b; margin-top: 4px;">Access your Assessments &amp; Attendance</p>
+        </div>
+
+        <!-- Institutional Notice Banner -->
+        <div class="auth-notice-strip">
+            <strong>📌 Academic Advisory:</strong> Minimum 75% attendance in theory &amp; practical laboratory classes is mandatory as per University / AKTU examination compliance norms.
+        </div>
+
+        <!-- Authentication Mode Selector (Password, Multi-Channel OTP) -->
+        <div class="auth-mode-selector">
+            <button type="button" class="auth-mode-btn active" id="modePasswordBtn" onclick="switchAuthMode('password')">
+                🔑 Password Login
+            </button>
+            <button type="button" class="auth-mode-btn" id="modeOtpBtn" onclick="switchAuthMode('otp')">
+                📲 OTP Login (Gmail / Mobile)
+            </button>
+        </div>
+
+        <!-- =====================================================
+             MODE 1: STANDARD PASSWORD AUTHENTICATION
+             ===================================================== -->
+        <div id="passwordAuthSection">
+            <!-- Role Tabs -->
+            <div class="portal-tabs-3" id="portalTabs">
+                <button
+                    type="button"
+                    class="portal-tab-3 {% if active_tab == 'student' or not active_tab %}active{% endif %}"
+                    id="tabStudentBtn"
+                    onclick="switchPortalTab('student')"
+                >
+                    🎓 Student SIS
+                </button>
+                <button
+                    type="button"
+                    class="portal-tab-3 {% if active_tab == 'faculty' %}active{% endif %}"
+                    id="tabFacultyBtn"
+                    onclick="switchPortalTab('faculty')"
+                >
+                    👨‍🏫 Faculty
+                </button>
+                <button
+                    type="button"
+                    class="portal-tab-3 {% if active_tab == 'admin' %}active{% endif %}"
+                    id="tabAdminBtn"
+                    onclick="switchPortalTab('admin')"
+                >
+                    🛡️ Admin ERP
+                </button>
+            </div>
+
+            <!-- 1. STUDENT LOGIN FORM -->
+            <div id="studentFormWrapper" style="display: {% if active_tab == 'student' or not active_tab %}block{% else %}none{% endif %};">
+                <div style="margin-bottom: 16px;">
+                    <strong style="color: #0f172a; font-size: 14px;">Student Academic Access</strong>
+                    <span style="font-size: 12px; color: #64748b; display: block;">Access CIE evaluations, CodeTech coding sandboxes &amp; attendance records</span>
+                </div>
+
+                <form method="POST" action="{{ url_for('login') }}" id="studentForm">
+                    <input type="hidden" name="role" value="student">
+
+                    <div class="form-group">
+                        <label for="student_email">Institutional Email / Roll Number</label>
+                        <input
+                            type="text"
+                            id="student_email"
+                            name="email"
+                            placeholder="Enter University Roll No. or Email"
+                            required
+                            autocomplete="username"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="student_password">Account Password</label>
+                        <input
+                            type="password"
+                            id="student_password"
+                            name="password"
+                            placeholder="Enter your student password"
+                            required
+                            autocomplete="current-password"
+                        >
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; margin-top: -8px; margin-bottom: 14px;">
+                        <a href="{{ url_for('forgot_password', role='student') }}" style="font-size: 12px; color: #0284c7; text-decoration: none; font-weight: 600;">
+                            🔑 Forgot Password? (पासवर्ड भूल गए?)
+                        </a>
+                    </div>
+
+                    <button type="submit" class="btn-auth-submit" style="background: #0284c7;">
+                        Sign In to Student Portal →
+                    </button>
+                </form>
+
+                <div style="margin-top: 16px; text-align: center; font-size: 12px; color: #64748b; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 14px; line-height: 1.4;">
+                    🔒 <strong>Institutional Notice:</strong> Student profiles are enrolled and registered authorizedly by Teaching Faculty from the <strong>Faculty Workstation</strong>.
+                </div>
+            </div>
+
+            <!-- 2. FACULTY LOGIN FORM -->
+            <div id="facultyFormWrapper" style="display: {% if active_tab == 'faculty' %}block{% else %}none{% endif %};">
+                <div style="margin-bottom: 16px;">
+                    <strong style="color: #0f172a; font-size: 14px;">Teaching Faculty Workstation</strong>
+                    <span style="font-size: 12px; color: #64748b; display: block;">Mark daily lecture attendance, oversee continuous evaluations &amp; student registers</span>
+                </div>
+
+                <form method="POST" action="{{ url_for('login') }}" id="facultyForm">
+                    <input type="hidden" name="role" value="faculty">
+
+                    <div class="form-group">
+                        <label for="faculty_email">Faculty Official Email ID</label>
+                        <input
+                            type="email"
+                            id="faculty_email"
+                            name="email"
+                            placeholder="Enter official faculty email"
+                            required
+                            autocomplete="username"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="faculty_password">Workstation Password</label>
+                        <input
+                            type="password"
+                            id="faculty_password"
+                            name="password"
+                            placeholder="Enter faculty password"
+                            required
+                            autocomplete="current-password"
+                        >
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; margin-top: -8px; margin-bottom: 14px;">
+                        <a href="{{ url_for('forgot_password', role='faculty') }}" style="font-size: 12px; color: #0284c7; text-decoration: none; font-weight: 600;">
+                            🔑 Forgot Password? (पासवर्ड भूल गए?)
+                        </a>
+                    </div>
+
+                    <button type="submit" class="btn-auth-submit" style="background: #1e3a8a;">
+                        Sign In to Faculty Workstation →
+                    </button>
+                </form>
+            </div>
+
+            <!-- 3. ADMIN LOGIN FORM -->
+            <div id="adminFormWrapper" style="display: {% if active_tab == 'admin' %}block{% else %}none{% endif %};">
+                <div style="margin-bottom: 16px;">
+                    <strong style="color: #0f172a; font-size: 14px;">Central ERP Administration</strong>
+                    <span style="font-size: 12px; color: #64748b; display: block;">Manage institutional records, curriculum assessments &amp; examination compliance</span>
+                </div>
+
+                <form method="POST" action="{{ url_for('login') }}" id="adminForm">
+                    <input type="hidden" name="role" value="admin">
+
+                    <div class="form-group">
+                        <label for="admin_email">ERP Administrator Email</label>
+                        <input
+                            type="email"
+                            id="admin_email"
+                            name="email"
+                            placeholder="Enter administrator email"
+                            required
+                            autocomplete="username"
+                        >
+                    </div>
+
+                    <div class="form-group">
+                        <label for="admin_password">Administrative Password</label>
+                        <input
+                            type="password"
+                            id="admin_password"
+                            name="password"
+                            placeholder="Enter administrator password"
+                            required
+                            autocomplete="current-password"
+                        >
+                    </div>
+
+                    <div style="display: flex; justify-content: flex-end; margin-top: -8px; margin-bottom: 14px;">
+                        <a href="{{ url_for('forgot_password', role='admin') }}" style="font-size: 12px; color: #0284c7; text-decoration: none; font-weight: 600;">
+                            🔑 Forgot Password? (पासवर्ड भूल गए?)
+                        </a>
+                    </div>
+
+                    <button type="submit" class="btn-auth-submit" style="background: #334155;">
+                        Sign In to Admin ERP Console →
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- =====================================================
+             MODE 2: MULTI-CHANNEL OTP AUTHENTICATION (GMAIL / MOBILE SMS)
+             ===================================================== -->
+        <div id="otpAuthSection" style="display: none;">
+            <div style="margin-bottom: 14px;">
+                <strong style="color: #0f172a; font-size: 14px;">Institutional Multi-Channel OTP Authentication</strong>
+                <span style="font-size: 12px; color: #64748b; display: block;">Instant passwordless sign-in via verified Gmail inbox or registered Indian Mobile SMS (+91)</span>
+            </div>
+
+            <div class="form-group" style="margin-bottom: 12px;">
+                <label for="otp_role">Institutional Portal Role</label>
+                <select id="otp_role" onchange="updateOtpPlaceholder()">
+                    <option value="student">🎓 Student SIS (Continuous Internal Evaluation)</option>
+                    <option value="faculty">👨‍🏫 Academic Faculty Workstation</option>
+                    <option value="admin">🛡️ Central ERP Administrator Console</option>
+                </select>
+            </div>
+
+            <!-- OTP Dispatch Channel Selection (Gmail vs Mobile SMS) -->
+            <div class="form-group" style="margin-bottom: 14px;">
+                <label style="font-size: 12px; font-weight: 700; color: #334155;">Select OTP Dispatch Delivery:</label>
+                <div style="display: grid; grid-template-columns: 1.2fr 1fr 1fr 1fr; gap: 5px;">
+                    <button type="button" class="portal-tab-3 active" id="otpChannelAllBtn" onclick="setOtpChannel('all')" style="padding: 9px 4px; font-weight: 700; font-size: 11px; border-radius: 8px; border: 1.5px solid #0284c7; background: #e0f2fe; color: #0369a1; cursor: pointer;">
+                        ⚡ Smart Auto
+                    </button>
+                    <button type="button" class="portal-tab-3" id="otpChannelEmailBtn" onclick="setOtpChannel('email')" style="padding: 9px 4px; font-weight: 700; font-size: 11px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer;">
+                        📧 Gmail
+                    </button>
+                    <button type="button" class="portal-tab-3" id="otpChannelMobileBtn" onclick="setOtpChannel('mobile')" style="padding: 9px 4px; font-weight: 700; font-size: 11px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer;">
+                        📱 Mobile SMS
+                    </button>
+                    <button type="button" class="portal-tab-3" id="otpChannelWaBtn" onclick="setOtpChannel('whatsapp')" style="padding: 9px 4px; font-weight: 700; font-size: 11px; border-radius: 8px; border: 1px solid #cbd5e1; background: #ffffff; color: #475569; cursor: pointer;">
+                        💬 WhatsApp
+                    </button>
+                </div>
+                <input type="hidden" id="otp_selected_channel" value="all">
+                <div id="otpChannelNotice" style="font-size: 11px; color: #0369a1; margin-top: 6px; font-weight: 600;">
+                    ✓ Smart Auto Dispatch: Gmail daalne par OTP Gmail par, Mobile number daalne par Mobile SIM par, aur Roll Number daalne par dono par jayega!
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="otp_identifier" id="otpIdentifierLabel">Institutional Email / Roll Number / Mobile</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="otp_identifier" placeholder="Enter Gmail, Mobile (+91), or University Roll No." value="" oninput="detectIdentifierType()" style="flex: 1;">
+                    <button type="button" class="btn btn-primary" id="sendOtpBtn" onclick="requestLoginOtp()" style="background: #0284c7; white-space: nowrap; font-size: 13px; font-weight: 700; padding: 0 16px;">
+                        📨 Send OTP
+                    </button>
+                </div>
+                <div id="otpInputTypeHint" style="font-size: 11px; margin-top: 6px; font-weight: 600; display: none;"></div>
+            </div>
+
+            <!-- Dispatched OTP Delivery Notice Banner -->
+            <div id="otpStatusAlert" style="display: none;" class="campus-otp-badge">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <span id="otpTargetBadge" style="font-size: 11px; font-weight: 800; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; background: #0284c7; color: #fff;">GMAIL</span>
+                    <span style="font-size: 11px; color: #059669; font-weight: 700;">Valid for 10 min</span>
+                </div>
+                <div style="font-weight: 800; font-size: 13px; margin-bottom: 4px;" id="otpStatusTitle">✓ Verification Passcode Dispatched</div>
+                <div style="font-size: 12px; line-height: 1.5;" id="otpStatusMsg">A 6-digit verification code has been dispatched. Please check your messages.</div>
+                <div style="font-size: 11px; color: #059669; margin-top: 6px;" id="otpDispatchMeta">Delivered to registered endpoint.</div>
+            </div>
+
+            <div class="form-group" style="margin-top: 14px;">
+                <label for="otp_code">Enter 6-Digit Passcode</label>
+                <input type="text" id="otp_code" maxlength="6" placeholder="• • • • • •" style="text-align: center; font-size: 20px; font-weight: 800; letter-spacing: 6px;">
+            </div>
+
+            <button type="button" class="btn-auth-submit" id="verifyOtpBtn" onclick="verifyLoginOtp()" style="background: #16a34a;">
+                ✓ Verify Passcode &amp; Access Dashboard →
+            </button>
+            <div id="otpErrorMsg" style="color: #dc2626; font-size: 13px; font-weight: 600; margin-top: 8px; text-align: center; display: none;"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Authentication Mode Switcher
+function switchAuthMode(mode) {
+    const pBtn = document.getElementById('modePasswordBtn');
+    const oBtn = document.getElementById('modeOtpBtn');
+
+    const pSec = document.getElementById('passwordAuthSection');
+    const oSec = document.getElementById('otpAuthSection');
+
+    pBtn.classList.remove('active');
+    oBtn.classList.remove('active');
+
+    pSec.style.display = 'none';
+    oSec.style.display = 'none';
+
+    if (mode === 'password') {
+        pBtn.classList.add('active');
+        pSec.style.display = 'block';
+    } else if (mode === 'otp') {
+        oBtn.classList.add('active');
+        oSec.style.display = 'block';
+    }
+}
+
+// Role Tabs inside Password Mode
+function switchPortalTab(role) {
+    const sBtn = document.getElementById('tabStudentBtn');
+    const fBtn = document.getElementById('tabFacultyBtn');
+    const aBtn = document.getElementById('tabAdminBtn');
+
+    const sWrap = document.getElementById('studentFormWrapper');
+    const fWrap = document.getElementById('facultyFormWrapper');
+    const aWrap = document.getElementById('adminFormWrapper');
+
+    sBtn.classList.remove('active');
+    fBtn.classList.remove('active');
+    aBtn.classList.remove('active');
+
+    sWrap.style.display = 'none';
+    fWrap.style.display = 'none';
+    aWrap.style.display = 'none';
+
+    if (role === 'student') {
+        sBtn.classList.add('active');
+        sWrap.style.display = 'block';
+    } else if (role === 'faculty') {
+        fBtn.classList.add('active');
+        fWrap.style.display = 'block';
+    } else if (role === 'admin') {
+        aBtn.classList.add('active');
+        aWrap.style.display = 'block';
+    }
+}
+
+// -----------------------------------------------------------------
+// MULTI-CHANNEL OTP AUTHENTICATION HANDLERS (GMAIL / MOBILE SMS)
+// -----------------------------------------------------------------
+let currentOtpChannel = 'all';
+
+function detectIdentifierType() {
+    const val = (document.getElementById('otp_identifier').value || '').trim();
+    const hint = document.getElementById('otpInputTypeHint');
+    if (!hint) return;
+    if (!val) {
+        hint.style.display = 'none';
+        return;
+    }
+    const cleanDigits = val.replace(/\D/g, '');
+    if (val.includes('@')) {
+        hint.style.display = 'block';
+        hint.style.color = '#0284c7';
+        hint.innerHTML = '📧 <strong>Gmail Detected:</strong> OTP will be sent directly to your <strong>Gmail Inbox</strong>.';
+    } else if (cleanDigits.length === 10 && (val.startsWith('+') || val.startsWith('0') || ['6','7','8','9'].includes(cleanDigits[0]))) {
+        hint.style.display = 'block';
+        hint.style.color = '#7c3aed';
+        hint.innerHTML = '📱 <strong>Mobile Number Detected:</strong> OTP will be sent directly to your <strong>Phone SIM (+91) via SMS / WhatsApp</strong>.';
+    } else if (cleanDigits.length >= 10) {
+        hint.style.display = 'block';
+        hint.style.color = '#059669';
+        hint.innerHTML = '🎓 <strong>Roll Number Detected:</strong> OTP will be sent to <strong>BOTH your Gmail AND Mobile Phone</strong>.';
+    } else {
+        hint.style.display = 'none';
+    }
+}
+
+function setOtpChannel(channel) {
+    currentOtpChannel = channel;
+    document.getElementById('otp_selected_channel').value = channel;
+    const allBtn = document.getElementById('otpChannelAllBtn');
+    const waBtn = document.getElementById('otpChannelWaBtn');
+    const emailBtn = document.getElementById('otpChannelEmailBtn');
+    const mobileBtn = document.getElementById('otpChannelMobileBtn');
+    const notice = document.getElementById('otpChannelNotice');
+    const label = document.getElementById('otpIdentifierLabel');
+
+    // Reset styles
+    [allBtn, waBtn, emailBtn, mobileBtn].forEach(b => {
+        if (b) {
+            b.style.border = '1px solid #cbd5e1';
+            b.style.background = '#ffffff';
+            b.style.color = '#475569';
+        }
+    });
+
+    if (channel === 'all' || channel === 'both' || channel === 'auto') {
+        allBtn.style.border = '1.5px solid #0284c7';
+        allBtn.style.background = '#e0f2fe';
+        allBtn.style.color = '#0369a1';
+        label.textContent = 'Registered College Email / Mobile (+91) / Roll Number';
+        notice.textContent = '✓ Smart Auto Active: Gmail daalne par OTP Gmail par, Mobile number par SMS, aur Roll Number daalne par dono par jayega!';
+        notice.style.color = '#0369a1';
+    } else if (channel === 'whatsapp') {
+        waBtn.style.border = '1.5px solid #16a34a';
+        waBtn.style.background = '#dcfce7';
+        waBtn.style.color = '#15803d';
+        label.textContent = 'WhatsApp Mobile Number (+91) / Roll Number';
+        notice.textContent = '✓ WhatsApp Active: Dispatches 6-digit passcode directly to your WhatsApp messenger (CallMeBot / Twilio)!';
+        notice.style.color = '#15803d';
+    } else if (channel === 'email') {
+        emailBtn.style.border = '1.5px solid #0284c7';
+        emailBtn.style.background = '#e0f2fe';
+        emailBtn.style.color = '#0369a1';
+        label.textContent = 'Institutional Gmail ID / Roll Number';
+        notice.textContent = '✓ Channel Active: Institutional Google Workspace (Gmail). Dispatches code to registered email address.';
+        notice.style.color = '#0369a1';
+    } else {
+        mobileBtn.style.border = '1.5px solid #7c3aed';
+        mobileBtn.style.background = '#f5f3ff';
+        mobileBtn.style.color = '#6d28d9';
+        label.textContent = 'Registered Mobile Number (+91) / Roll Number';
+        notice.textContent = '✓ Channel Active: Indian Telecom SMS Gateway (+91). Dispatches code to registered mobile phone via SMS.';
+        notice.style.color = '#7c3aed';
+    }
+}
+
+function updateOtpPlaceholder() {
+    const r = document.getElementById('otp_role').value;
+    const inp = document.getElementById('otp_identifier');
+    if (!inp) return;
+    inp.value = '';
+    if (r === 'student') inp.placeholder = 'Enter Student Gmail, Mobile, or Roll No.';
+    else if (r === 'faculty') inp.placeholder = 'Enter Faculty Gmail, Mobile, or Aadhaar';
+    else if (r === 'admin') inp.placeholder = 'Enter Admin Email or Mobile';
+    detectIdentifierType();
+}
+
+function requestLoginOtp() {
+    const identifier = document.getElementById('otp_identifier').value.trim();
+    const role = document.getElementById('otp_role').value;
+    const channel = currentOtpChannel;
+    const sendBtn = document.getElementById('sendOtpBtn');
+    const alertBox = document.getElementById('otpStatusAlert');
+    const errBox = document.getElementById('otpErrorMsg');
+
+    if (!identifier) {
+        alert('Please enter your email, roll number, or registered mobile.');
+        return;
+    }
+
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Sending...';
+    errBox.style.display = 'none';
+
+    const formData = new URLSearchParams({ identifier: identifier, role: role, channel: channel });
+
+    fetch('/auth/send-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
+    })
+    .then(r => r.json())
+    .then(data => {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Resend OTP';
+        if (data.success) {
+            alertBox.style.display = 'block';
+            let badgeText = '🚀 GMAIL + SIM + WHATSAPP';
+            let badgeColor = '#0284c7';
+            if (data.channel === 'whatsapp') {
+                badgeText = '💬 WHATSAPP';
+                badgeColor = '#15803d';
+            } else if (data.channel === 'mobile') {
+                badgeText = '📱 MOBILE SMS';
+                badgeColor = '#7c3aed';
+            } else if (data.channel === 'email') {
+                badgeText = '📧 GMAIL INBOX';
+                badgeColor = '#0284c7';
+            }
+            document.getElementById('otpTargetBadge').textContent = badgeText;
+            document.getElementById('otpTargetBadge').style.background = badgeColor;
+            document.getElementById('otpStatusTitle').textContent = '✓ Verification Code Dispatched Directly';
+            document.getElementById('otpStatusMsg').textContent = data.message;
+            document.getElementById('otp_code').value = '';
+            document.getElementById('otp_code').focus();
+
+            let meta = `Dispatched at ${new Date().toLocaleTimeString()}`;
+            if (data.masked_email) meta += ` • Gmail: ${data.masked_email}`;
+            if (data.masked_mobile) meta += ` • Mobile / WA: ${data.masked_mobile}`;
+            document.getElementById('otpDispatchMeta').textContent = meta;
+        } else {
+            errBox.textContent = data.message || 'Failed to dispatch OTP passcode.';
+            errBox.style.display = 'block';
+        }
+    })
+    .catch(() => {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send OTP';
+        errBox.textContent = 'Network error while contacting security authentication server.';
+        errBox.style.display = 'block';
+    });
+}
+
+function verifyLoginOtp() {
+    const otp = document.getElementById('otp_code').value.trim();
+    const errBox = document.getElementById('otpErrorMsg');
+    const verifyBtn = document.getElementById('verifyOtpBtn');
+
+    if (!otp || otp.length < 6) {
+        errBox.textContent = 'Please enter the complete 6-digit OTP passcode.';
+        errBox.style.display = 'block';
+        return;
+    }
+
+    verifyBtn.disabled = true;
+    verifyBtn.textContent = 'Verifying Passcode...';
+    errBox.style.display = 'none';
+
+    const formData = new URLSearchParams({ otp: otp });
+
+    fetch('/auth/verify-otp', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: formData.toString()
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            verifyBtn.textContent = '✓ Verified! Redirecting...';
+            verifyBtn.style.background = '#15803d';
+            window.location.href = data.redirect_url || '/student/dashboard';
+        } else {
+            verifyBtn.disabled = false;
+            verifyBtn.textContent = '✓ Verify Passcode & Access Dashboard →';
+            errBox.textContent = data.message || 'Invalid verification passcode.';
+            errBox.style.display = 'block';
+        }
+    })
+    .catch(() => {
+        verifyBtn.disabled = false;
+        verifyBtn.textContent = '✓ Verify Passcode & Access Dashboard →';
+        errBox.textContent = 'Network communication error.';
+        errBox.style.display = 'block';
+    });
+}
+
+
+</script>
+
+{% endblock %}

@@ -1,0 +1,226 @@
+{% extends "base.html" %}
+
+{% block title %}Student Profile — SyllabusX{% endblock %}
+
+{% block content %}
+
+<div class="dashboard-header">
+
+
+<div>
+
+    <h1>
+        Student Details
+    </h1>
+
+    <p>
+        Detailed student information
+    </p>
+
+</div>
+
+
+</div>
+
+<div class="student-profile">
+    <div style="display: flex; gap: 24px; align-items: center; margin-bottom: 20px; flex-wrap: wrap;">
+        <div style="text-align: center;">
+            {% if student['face_photo'] %}
+                <img src="{{ url_for('static', filename='uploads/face_profiles/' + student['face_photo']) }}" 
+                     alt="{{ student['name'] }}" 
+                     style="width: 110px; height: 130px; border-radius: 8px; object-fit: cover; border: 2.5px solid #0284c7; box-shadow: 0 4px 10px rgba(0,0,0,0.1);"
+                     onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name={{ student.name | urlencode }}&background=0284c7&color=fff&size=160';">
+            {% else %}
+                <div style="width: 110px; height: 130px; border-radius: 8px; background: #e2e8f0; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #64748b; font-size: 12px; border: 2px dashed #cbd5e1;">
+                    <span style="font-size: 36px; margin-bottom: 4px;">👤</span>
+                    No Photo
+                </div>
+            {% endif %}
+            <div style="font-size: 11px; font-weight: 800; color: #0284c7; margin-top: 6px;">OFFICIAL PHOTO</div>
+        </div>
+        <div>
+            <h2 style="margin: 0 0 4px 0;">{{ student["name"] }}</h2>
+            <p style="margin: 0 0 6px 0; color: #64748b; font-size: 14px;">Roll Number: <strong>{{ student["roll_number"] }}</strong></p>
+            <span class="status-badge status-{{ student['status'] }}">{{ student["status"]|capitalize }}</span>
+        </div>
+    </div>
+
+
+<div class="profile-grid">
+
+    <div class="profile-item">
+
+        <span class="profile-label">
+            Full Name
+        </span>
+
+        <strong>
+            {{ student["name"] }}
+        </strong>
+
+    </div>
+
+
+    <div class="profile-item">
+
+        <span class="profile-label">
+            Roll Number
+        </span>
+
+        <strong>
+            {{ student["roll_number"] }}
+        </strong>
+
+    </div>
+
+
+    <div class="profile-item">
+
+        <span class="profile-label">
+            College Email
+        </span>
+
+        <strong>
+            {{ student["email"] }}
+        </strong>
+
+    </div>
+
+
+    <div class="profile-item">
+
+        <span class="profile-label">
+            Account Status
+        </span>
+
+        <strong>
+            {{ student["status"]|capitalize }}
+        </strong>
+
+    </div>
+
+
+    <div class="profile-item">
+
+        <span class="profile-label">
+            Registration Date
+        </span>
+
+        <strong>
+            {{ student["created_at"] }}
+        </strong>
+
+    </div>
+
+
+    <div class="profile-item">
+
+        <span class="profile-label">
+            Last Login
+        </span>
+
+        <strong>
+
+            {% if student["last_login"] %}
+                {{ student["last_login"] }}
+            {% else %}
+                Never
+            {% endif %}
+
+        </strong>
+
+    </div>
+
+</div>
+
+
+</div>
+
+<div class="table-card">
+
+
+<div class="table-header">
+
+    <h2>
+        Student Activity
+    </h2>
+
+</div>
+
+
+{% if activities %}
+
+<div class="table-wrapper">
+
+    <table>
+
+        <thead>
+
+            <tr>
+
+                <th>
+                    Activity
+                </th>
+
+                <th>
+                    Date & Time
+                </th>
+
+            </tr>
+
+        </thead>
+
+
+        <tbody>
+
+            {% for activity in activities %}
+
+            <tr>
+
+                <td>
+                    {{ activity["action"] }}
+                </td>
+
+                <td>
+                    {{ activity["created_at"] }}
+                </td>
+
+            </tr>
+
+            {% endfor %}
+
+        </tbody>
+
+    </table>
+
+</div>
+
+{% else %}
+
+<div class="empty-state">
+
+    <p>
+        No activity recorded yet.
+    </p>
+
+</div>
+
+{% endif %}
+
+
+</div>
+
+<div class="dashboard-actions">
+
+
+<a
+    href="{{ url_for('admin_dashboard') }}"
+    class="btn btn-secondary"
+>
+    ← Back to Dashboard
+</a>
+
+
+</div>
+
+{% endblock %}
