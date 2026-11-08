@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Submissions: {{ assignment.title if assignment else 'Assignment' }} — SyllabusX{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+    <div class="dashboard-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="portal-badge" style="background: #1e3a8a; color: white;">EVALUATION</span>
+                <span class="status-badge status-active">Student Submissions</span>
+            </div>
+            <h1>{{ assignment.title }}</h1>
+            <p>{{ assignment.course_name }} • Maximum Marks: {{ assignment.max_marks }} | Due: {{ assignment.due_date or 'No date' }}</p>
+        </div>
+        <div class="header-action-buttons">
+            <a href="{{ url_for('faculty_assignments') }}" class="btn btn-secondary">
+                ← Back to Assignments
+            </a>
+        </div>
+    </div>
+
+    {% if submissions %}
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+        {% for s in submissions %}
+        <div class="dashboard-card" style="margin-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 10px; margin-bottom: 12px;">
+                <div>
+                    <h3 style="margin: 0; font-size: 16px; color: #0f172a;">{{ s.student_name }}</h3>
+                    <p style="margin: 2px 0 0; font-size: 12px; color: #64748b;">
+                        Roll No: <strong>{{ s.roll_number }}</strong> | Email: {{ s.student_email }} | Submitted: {{ s.submitted_at }}
+                    </p>
+                </div>
+                <div>
+                    {% if s.status == 'graded' %}
+                        <span class="status-badge status-active" style="background: #dcfce7; color: #15803d; font-size: 13px; font-weight: 800;">
+                            ✓ Graded: {{ s.marks_obtained }} / {{ assignment.max_marks }}
+                        </span>
+                    {% else %}
+                        <span class="status-badge" style="background: #fee2e2; color: #dc2626; font-size: 13px; font-weight: 700;">
+                            ⏳ Needs Grading
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Student Submission Content -->
+            <div style="background: #0f172a; color: #f8fafc; border-radius: 8px; padding: 14px; margin-bottom: 14px; font-family: monospace; font-size: 13px; max-height: 250px; overflow-y: auto; white-space: pre-wrap;">{{ s.submission_text }}</div>
+
+            <!-- Grade Form -->
+            <form action="{{ url_for('faculty_assignment_submissions', assignment_id=assignment.id) }}" method="POST" style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 14px;">
+                <input type="hidden" name="submission_id" value="{{ s.id }}">
+                <div style="display: grid; grid-template-columns: 140px 1fr auto; gap: 12px; align-items: flex-end;">
+                    <div>
+                        <label style="display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px;">Award Marks (0-{{ assignment.max_marks }}) *</label>
+                        <input type="number" name="marks_obtained" value="{{ s.marks_obtained if s.marks_obtained is not none else '' }}" min="0" max="{{ assignment.max_marks }}" required placeholder="Marks" style="width: 100%; padding: 8px 10px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <label style="display: block; font-size: 11px; font-weight: 700; color: #475569; margin-bottom: 4px;">Faculty Feedback / Suggestions</label>
+                        <input type="text" name="feedback" value="{{ s.feedback or '' }}" placeholder="e.g. Excellent structure; test cases passed." style="width: 100%; padding: 8px 10px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                    </div>
+                    <div>
+                        <button type="submit" class="btn btn-primary" style="background: #16a34a; font-weight: 700;">
+                            ✓ Save Grade
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No student submissions received for this assignment yet.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

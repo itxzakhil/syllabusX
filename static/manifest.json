@@ -1,0 +1,16 @@
+{
+  "name": "SyllabusX — Campus ERP & CodeTech Labs",
+  "short_name": "SyllabusX",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#1e3a8a",
+  "description": "Comprehensive Campus Academic ERP & Automated Coding Sandbox for Meerut Institute of Technology",
+  "icons": [
+    {
+      "src": "/static/uploads/face_profiles/face_210282018888_1791865751.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg"
+    }
+  ]
+}

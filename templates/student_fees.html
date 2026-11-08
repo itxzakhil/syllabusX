@@ -1,0 +1,96 @@
+{% extends "base.html" %}
+
+{% block title %}Fees &amp; Receipts — SyllabusX{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+    <div class="college-badge-banner">
+        <div class="college-crest-icon">💳</div>
+        <div class="college-info">
+            <h2>Meerut Institute of Technology</h2>
+            <p>Student Accounts &amp; Treasury • Department of Computer Science &amp; Engineering</p>
+            <span class="college-tagline">Academic Fee Ledger, Online Clearance &amp; Digitally Verified Receipts</span>
+        </div>
+    </div>
+
+    <div class="dashboard-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="portal-badge" style="background: #0284c7; color: white;">FINANCE MODULE</span>
+                <span class="status-badge status-active">Account Status</span>
+            </div>
+            <h1>Semester Fees &amp; Official Receipts</h1>
+            <p>View your tuition fee ledgers, payment clearance status, and download tax/official receipts.</p>
+        </div>
+        <div class="header-action-buttons">
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">
+                ← Student Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% if fee_records %}
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+        {% for f in fee_records %}
+        <div class="dashboard-card" style="margin-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 12px; margin-bottom: 14px;">
+                <div>
+                    <span class="portal-badge" style="background: #e0f2fe; color: #0369a1; font-weight: 700; margin-bottom: 4px; display: inline-block;">
+                        {{ f.academic_year }} • {{ f.semester }}
+                    </span>
+                    <h3 style="margin: 0; font-size: 18px; color: #0f172a;">B.Tech Tuition &amp; Examination Fees</h3>
+                    <p style="margin: 3px 0 0; font-size: 12px; color: #64748b;">
+                        Receipt No: <strong>{{ f.receipt_number }}</strong> | Payment Date: {{ f.payment_date }}
+                    </p>
+                </div>
+                <div>
+                    {% if f.status == 'Paid' %}
+                        <span class="status-badge status-active" style="background: #dcfce7; color: #15803d; font-size: 14px; font-weight: 800; padding: 6px 14px;">
+                            ✓ Fully Paid
+                        </span>
+                    {% else %}
+                        <span class="status-badge" style="background: #fee2e2; color: #dc2626; font-size: 14px; font-weight: 800; padding: 6px 14px;">
+                            ⚠️ {{ f.status }} (Due: ₹{{ "%.2f"|format(f.due_amount) }})
+                        </span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Fee Breakdown Grid -->
+            <div class="stats-grid" style="margin-bottom: 16px;">
+                <div class="stat-card" style="padding: 14px;">
+                    <div class="stat-title">Total Fee Payable</div>
+                    <div class="stat-number" style="font-size: 22px;">₹{{ "%.2f"|format(f.total_amount) }}</div>
+                    <div class="stat-description">Tuition + Lab + Library</div>
+                </div>
+                <div class="stat-card" style="padding: 14px;">
+                    <div class="stat-title">Amount Paid</div>
+                    <div class="stat-number text-green" style="font-size: 22px;">₹{{ "%.2f"|format(f.paid_amount) }}</div>
+                    <div class="stat-description">{{ f.payment_mode }}</div>
+                </div>
+                <div class="stat-card" style="padding: 14px;">
+                    <div class="stat-title">Balance / Dues</div>
+                    <div class="stat-number {% if f.due_amount > 0 %}text-red{% else %}text-green{% endif %}" style="font-size: 22px;">
+                        ₹{{ "%.2f"|format(f.due_amount) }}
+                    </div>
+                    <div class="stat-description">{% if f.due_amount == 0 %}No outstanding dues{% else %}Payable before exams{% endif %}</div>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <a href="{{ url_for('student_fee_receipt', fee_id=f.id) }}" target="_blank" class="btn btn-primary" style="background: #1e3a8a; font-weight: 700;">
+                    🖨️ View &amp; Print Official Fee Receipt →
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No fee payment records found for your account.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

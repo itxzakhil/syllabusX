@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Course Assignments — SyllabusX{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+    <div class="college-badge-banner">
+        <div class="college-crest-icon">📚</div>
+        <div class="college-info">
+            <h2>Meerut Institute of Technology</h2>
+            <p>Continuous Internal Evaluation (CIE) • Department of Computer Science &amp; Engineering</p>
+            <span class="college-tagline">Academic Assignments, Lab Deliverables &amp; Faculty Review</span>
+        </div>
+    </div>
+
+    <div class="dashboard-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="portal-badge" style="background: #7c3aed; color: white;">ACADEMIC WORK</span>
+                <span class="status-badge status-active">CIE Component</span>
+            </div>
+            <h1>Course Assignments &amp; Lab Projects</h1>
+            <p>Submit assignments, track evaluation status, and view faculty marks &amp; feedback.</p>
+        </div>
+        <div class="header-action-buttons">
+            <a href="{{ url_for('student_dashboard') }}" class="btn btn-secondary">
+                ← Student Dashboard
+            </a>
+        </div>
+    </div>
+
+    {% if assignments %}
+    <div style="display: flex; flex-direction: column; gap: 20px;">
+        {% for a in assignments %}
+        <div class="dashboard-card" style="margin-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-bottom: 12px; border-bottom: 1.5px solid #f1f5f9; padding-bottom: 12px;">
+                <div>
+                    <span class="portal-badge" style="background: #e0e7ff; color: #4338ca; font-size: 11px; margin-bottom: 6px; display: inline-block;">
+                        {{ a.course_code or 'CSE' }} • {{ a.course_name or 'Computer Science' }}
+                    </span>
+                    <h3 style="margin: 0; font-size: 18px; color: #0f172a;">{{ a.title }}</h3>
+                </div>
+                <div style="text-align: right;">
+                    <span style="font-size: 12px; color: #64748b; display: block;">Due Date: <strong>{{ a.due_date or 'No deadline' }}</strong></span>
+                    <span style="font-size: 12px; color: #64748b;">Max Marks: <strong>{{ a.max_marks }}</strong></span>
+                </div>
+            </div>
+
+            <p style="color: #475569; font-size: 14px; line-height: 1.6; margin-bottom: 16px;">
+                {{ a.description }}
+            </p>
+
+            <div style="background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-bottom: 16px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                    <div>
+                        <span style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase;">Submission Status:</span>
+                        {% if a.submission_status == 'graded' %}
+                            <span class="status-badge status-active" style="background: #dcfce7; color: #15803d; font-weight: 700;">
+                                ✓ Graded: {{ a.marks_obtained }} / {{ a.max_marks }}
+                            </span>
+                        {% elif a.submission_status in ['submitted', 'resubmitted'] %}
+                            <span class="status-badge" style="background: #e0f2fe; color: #0284c7; font-weight: 700;">
+                                ⏳ Under Review (Submitted {{ (a.submitted_at|string)[:10] if a.submitted_at else '' }})
+                            </span>
+                        {% else %}
+                            <span class="status-badge" style="background: #fee2e2; color: #dc2626; font-weight: 700;">
+                                ⚠️ Pending Submission
+                            </span>
+                        {% endif %}
+                    </div>
+
+                    {% if a.feedback %}
+                    <div style="width: 100%; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #cbd5e1; font-size: 13px; color: #334155;">
+                        <strong>Faculty Remarks:</strong> <em>"{{ a.feedback }}"</em>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <form action="{{ url_for('student_submit_assignment', assignment_id=a.id) }}" method="POST">
+                <div style="margin-bottom: 12px;">
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">
+                        {% if a.submission_status %}Update Solution / Code:{% else %}Your Solution / Code / Write-up:{% endif %}
+                    </label>
+                    <textarea name="submission_text" rows="4" placeholder="Paste your solution code, algorithm description, or GitHub repository link here..." required style="width: 100%; padding: 10px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-family: monospace; box-sizing: border-box;"></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end;">
+                    <button type="submit" class="btn btn-primary" style="background: #16a34a; font-weight: 700;">
+                        {% if a.submission_status %}🔄 Resubmit Assignment{% else %}📤 Submit Assignment{% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No active assignments posted at this time.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

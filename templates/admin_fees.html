@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+
+{% block title %}Fee Records &amp; Treasury — SyllabusX{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+    <div class="college-badge-banner">
+        <div class="college-crest-icon">🏛️</div>
+        <div class="college-info">
+            <h2>Meerut Institute of Technology</h2>
+            <p>Finance &amp; Accounts Registry • Department of Computer Science &amp; Engineering</p>
+            <span class="college-tagline">Campus Fee Clearance, Accounts Ledger &amp; Treasury Records</span>
+        </div>
+    </div>
+
+    <div class="dashboard-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="portal-badge" style="background: #1e3a8a; color: white;">TREASURY</span>
+                <span class="status-badge status-active">Accounts Overview</span>
+            </div>
+            <h1>Institutional Fee Ledgers</h1>
+            <p>Comprehensive roster of student fee payments, dues, and transaction receipt references.</p>
+        </div>
+        <div class="header-action-buttons">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-secondary">
+                ← Admin Console
+            </a>
+        </div>
+    </div>
+
+    {% if fee_records %}
+    <div class="dashboard-card">
+        <div class="table-wrapper">
+            <table class="student-table">
+                <thead>
+                    <tr>
+                        <th>Receipt No</th>
+                        <th>Roll Number</th>
+                        <th>Student Name</th>
+                        <th>Term</th>
+                        <th>Total Fee</th>
+                        <th>Paid</th>
+                        <th>Dues</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for f in fee_records %}
+                    <tr>
+                        <td><strong>{{ f.receipt_number }}</strong></td>
+                        <td>{{ f.roll_number }}</td>
+                        <td>{{ f.student_name }}</td>
+                        <td><small>{{ f.semester }}</small></td>
+                        <td>₹{{ "%.2f"|format(f.total_amount) }}</td>
+                        <td class="text-green" style="font-weight: 700;">₹{{ "%.2f"|format(f.paid_amount) }}</td>
+                        <td class="{% if f.due_amount > 0 %}text-red{% else %}text-green{% endif %}">₹{{ "%.2f"|format(f.due_amount) }}</td>
+                        <td>
+                            {% if f.status == 'Paid' %}
+                                <span class="status-badge status-active" style="background: #dcfce7; color: #15803d; font-size: 11px;">✓ Paid</span>
+                            {% else %}
+                                <span class="status-badge" style="background: #fee2e2; color: #dc2626; font-size: 11px;">⚠️ {{ f.status }}</span>
+                            {% endif %}
+                        </td>
+                        <td><small>{{ f.payment_date }}</small></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No fee records available in the treasury ledger.</p>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}

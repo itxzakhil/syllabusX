@@ -34,6 +34,11 @@
             <a href="{{ url_for('admin_attendance') }}" class="btn btn-primary" style="background: #16a34a; font-weight: 700;">
                 + Take New Attendance
             </a>
+            <form action="{{ url_for('send_shortage_alerts') }}" method="POST" style="display: inline;" onsubmit="return confirm('Dispatch official AKTU attendance shortage alerts to all students below 75% attendance via SMS/WhatsApp?');">
+                <button type="submit" class="btn btn-secondary" style="background: #dc2626; color: white; border-color: #dc2626; font-weight: 700;">
+                    🚨 Send Shortage Alerts (&lt;75%)
+                </button>
+            </form>
             {% if session.get('faculty_id') %}
             <a href="{{ url_for('faculty_dashboard') }}" class="btn btn-secondary">
                 ← Faculty Dashboard

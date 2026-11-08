@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fee Receipt - {{ fee.receipt_number }} | Meerut Institute of Technology</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f1f5f9;
+            margin: 0;
+            padding: 30px;
+            color: #0f172a;
+        }
+        .receipt-card {
+            max-width: 750px;
+            margin: 0 auto;
+            background: #ffffff;
+            border: 2px solid #cbd5e1;
+            border-radius: 12px;
+            padding: 36px 40px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.06);
+            position: relative;
+        }
+        .receipt-watermark {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(-30deg);
+            font-size: 80px;
+            font-weight: 900;
+            color: rgba(22, 163, 74, 0.06);
+            pointer-events: none;
+            text-transform: uppercase;
+            letter-spacing: 6px;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            border-bottom: 2.5px solid #1e3a8a;
+            padding-bottom: 18px;
+            margin-bottom: 22px;
+            gap: 20px;
+        }
+        .crest {
+            font-size: 50px;
+            background: #eff6ff;
+            border-radius: 12px;
+            padding: 10px 16px;
+        }
+        .title h1 {
+            margin: 0;
+            font-size: 22px;
+            color: #1e3a8a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .title p {
+            margin: 3px 0 0;
+            font-size: 12px;
+            color: #475569;
+        }
+        .meta-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px 24px;
+            background: #f8fafc;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            font-size: 13px;
+        }
+        .meta-item strong {
+            color: #334155;
+            display: inline-block;
+            width: 130px;
+        }
+        .fee-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 24px;
+        }
+        .fee-table th {
+            background: #1e3a8a;
+            color: #ffffff;
+            text-align: left;
+            padding: 10px 14px;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+        .fee-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 13px;
+        }
+        .fee-table tr:last-child td {
+            border-bottom: 2px solid #0f172a;
+            font-weight: 700;
+        }
+        .footer-signatures {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 50px;
+            padding-top: 20px;
+        }
+        .signature-box {
+            text-align: center;
+            border-top: 1.5px solid #94a3b8;
+            padding-top: 8px;
+            font-size: 12px;
+            color: #475569;
+            width: 180px;
+        }
+        .print-btn {
+            display: inline-block;
+            background: #1e3a8a;
+            color: #ffffff;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            margin-bottom: 16px;
+        }
+        @media print {
+            body { background: white; padding: 0; }
+            .receipt-card { border: none; box-shadow: none; padding: 0; }
+            .print-btn { display: none; }
+        }
+    </style>
+</head>
+<body>
+
+    <div style="max-width: 750px; margin: 0 auto; text-align: right;">
+        <button class="print-btn" onclick="window.print()">🖨️ Print / Save as PDF</button>
+    </div>
+
+    <div class="receipt-card">
+        <div class="receipt-watermark">PAID &amp; VERIFIED</div>
+
+        <div class="header">
+            <div class="crest">🏛️</div>
+            <div class="title">
+                <h1>Meerut Institute of Technology</h1>
+                <p>NH-58, Baral Partapur, Bypass Road, Meerut, Uttar Pradesh 250103</p>
+                <p>Affiliated to Dr. A.P.J. Abdul Kalam Technical University (AKTU Code: 292)</p>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 18px;">
+            <span style="background: #1e3a8a; color: white; padding: 4px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; letter-spacing: 1px;">
+                OFFICIAL STUDENT FEE RECEIPT
+            </span>
+        </div>
+
+        <div class="meta-grid">
+            <div class="meta-item"><strong>Receipt Number:</strong> {{ fee.receipt_number }}</div>
+            <div class="meta-item"><strong>Date of Payment:</strong> {{ fee.payment_date }}</div>
+            <div class="meta-item"><strong>Student Name:</strong> {{ fee.name }}</div>
+            <div class="meta-item"><strong>University Roll No:</strong> {{ fee.roll_number }}</div>
+            <div class="meta-item"><strong>Course / Branch:</strong> B.Tech (Computer Science &amp; Engineering)</div>
+            <div class="meta-item"><strong>Academic Term:</strong> {{ fee.academic_year }} • {{ fee.semester }}</div>
+            <div class="meta-item"><strong>Payment Mode:</strong> {{ fee.payment_mode }}</div>
+            <div class="meta-item"><strong>Clearance Status:</strong> <span style="color: #16a34a; font-weight: 800;">✓ {{ fee.status }}</span></div>
+        </div>
+
+        <table class="fee-table">
+            <thead>
+                <tr>
+                    <th>S.No.</th>
+                    <th>Fee Description</th>
+                    <th style="text-align: right;">Amount (INR)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>1</td>
+                    <td>Tuition Fee (Theory Lecture &amp; Faculty Instruction)</td>
+                    <td style="text-align: right;">₹45,000.00</td>
+                </tr>
+                <tr>
+                    <td>2</td>
+                    <td>CodeTech Automated Lab, Computing &amp; Server Infrastructure Fee</td>
+                    <td style="text-align: right;">₹10,000.00</td>
+                </tr>
+                <tr>
+                    <td>3</td>
+                    <td>University Examination &amp; CIE Evaluation Assessment Fee</td>
+                    <td style="text-align: right;">₹5,000.00</td>
+                </tr>
+                <tr>
+                    <td>4</td>
+                    <td>Digital Library &amp; Campus Academic Resources</td>
+                    <td style="text-align: right;">₹5,000.00</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: right;"><strong>Total Fee Payable:</strong></td>
+                    <td style="text-align: right;">₹{{ "%.2f"|format(fee.total_amount) }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: right; color: #16a34a;"><strong>Amount Paid:</strong></td>
+                    <td style="text-align: right; color: #16a34a; font-weight: 800;">₹{{ "%.2f"|format(fee.paid_amount) }}</td>
+                </tr>
+                <tr>
+                    <td colspan="2" style="text-align: right;"><strong>Balance Dues:</strong></td>
+                    <td style="text-align: right;">₹{{ "%.2f"|format(fee.due_amount) }}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="font-size: 11px; color: #64748b; line-height: 1.5; margin-bottom: 24px;">
+            <em>Note: This is a system-generated electronic receipt issued via the SyllabusX Campus ERP Portal. All electronic records are digitally authenticated against treasury transaction logs.</em>
+        </div>
+
+        <div class="footer-signatures">
+            <div class="signature-box">
+                Student Signature
+            </div>
+            <div class="signature-box">
+                Authorized Accounts Officer<br>
+                <strong>MIT Meerut Treasury</strong>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

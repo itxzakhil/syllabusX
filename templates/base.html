@@ -5,6 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SyllabusX — Meerut Institute of Technology{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <meta name="theme-color" content="#1e3a8a">
+    <script>
+        (function() {
+            var savedTheme = localStorage.getItem('syllabusx-theme');
+            if (savedTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            }
+        })();
+    </script>
     {% block extra_head %}{% endblock %}
 </head>
 <body>
@@ -32,6 +42,15 @@
                 <a href="{{ url_for('student_attendance') }}">
                     My Attendance
                 </a>
+                <a href="{{ url_for('student_assignments') }}">
+                    Assignments
+                </a>
+                <a href="{{ url_for('student_fees') }}">
+                    Fees
+                </a>
+                <a href="{{ url_for('campus_forum') }}">
+                    Forum
+                </a>
                 <a href="{{ url_for('logout') }}" class="nav-logout-btn">
                     Logout
                 </a>
@@ -47,6 +66,12 @@
                 </a>
                 <a href="{{ url_for('admin_attendance') }}">
                     Mark Attendance
+                </a>
+                <a href="{{ url_for('faculty_assignments') }}">
+                    Assignments
+                </a>
+                <a href="{{ url_for('campus_forum') }}">
+                    Forum
                 </a>
                 <a href="{{ url_for('faculty_logout') }}" class="nav-logout-btn">
                     Logout
@@ -67,6 +92,12 @@
                 <a href="{{ url_for('admin_attendance_records') }}">
                     Attendance Records
                 </a>
+                <a href="{{ url_for('admin_fees') }}">
+                    Treasury / Fees
+                </a>
+                <a href="{{ url_for('campus_forum') }}">
+                    Forum
+                </a>
                 <a href="{{ url_for('admin_logout') }}" class="nav-logout-btn">
                     Logout
                 </a>
@@ -81,6 +112,9 @@
                     Admin Login
                 </a>
             {% endif %}
+            <button type="button" id="themeToggleBtn" onclick="toggleTheme()" style="background: transparent; border: 1.5px solid #cbd5e1; border-radius: 6px; cursor: pointer; padding: 5px 10px; font-size: 15px; margin-left: 6px;" title="Toggle Dark / Light Mode">
+                🌙
+            </button>
         </div>
     </div>
 </nav>
@@ -106,5 +140,31 @@
     </p>
 </footer>
 
+    <script>
+    function toggleTheme() {
+        var current = document.documentElement.getAttribute('data-theme');
+        var next = (current === 'dark') ? 'light' : 'dark';
+        if (next === 'dark') {
+            document.documentElement.setAttribute('data-theme', 'dark');
+            localStorage.setItem('syllabusx-theme', 'dark');
+            var btn = document.getElementById('themeToggleBtn');
+            if (btn) btn.innerText = '☀️';
+        } else {
+            document.documentElement.removeAttribute('data-theme');
+            localStorage.setItem('syllabusx-theme', 'light');
+            var btn = document.getElementById('themeToggleBtn');
+            if (btn) btn.innerText = '🌙';
+        }
+    }
+    if (localStorage.getItem('syllabusx-theme') === 'dark') {
+        var btn = document.getElementById('themeToggleBtn');
+        if (btn) btn.innerText = '☀️';
+    }
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/static/sw.js').catch(function(){});
+        });
+    }
+    </script>
 </body>
 </html>

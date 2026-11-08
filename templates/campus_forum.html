@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}Discussion Forum &amp; Doubt Clearing — SyllabusX{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+    <div class="college-badge-banner">
+        <div class="college-crest-icon">💬</div>
+        <div class="college-info">
+            <h2>Meerut Institute of Technology</h2>
+            <p>Peer Learning &amp; Academic Doubts • Department of Computer Science &amp; Engineering</p>
+            <span class="college-tagline">Course Discussions, Algorithm Debugging &amp; Faculty Guidance</span>
+        </div>
+    </div>
+
+    <div class="dashboard-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="portal-badge" style="background: #0d9488; color: white;">COMMUNITY FORUM</span>
+                <span class="status-badge status-active">Q&amp;A Active</span>
+            </div>
+            <h1>Campus Discussion &amp; Doubt Forum</h1>
+            <p>Ask programming questions, discuss theory concepts, and collaborate with peers &amp; faculty.</p>
+        </div>
+        <div class="header-action-buttons">
+            <button type="button" onclick="toggleNewTopicDrawer()" class="btn btn-primary" style="background: #0d9488; font-weight: 700;">
+                💬 Ask a Question
+            </button>
+        </div>
+    </div>
+
+    <!-- Ask Question Drawer -->
+    <div id="newTopicDrawer" style="display: none; background: white; border: 2px solid #0d9488; border-radius: 12px; padding: 22px; margin-bottom: 24px; box-shadow: 0 4px 16px rgba(13, 148, 136, 0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; border-bottom: 1.5px solid #ccfbf1; padding-bottom: 10px;">
+            <h3 style="margin: 0; color: #0f766e; font-size: 17px; font-weight: 800;">💬 Start a New Discussion Topic</h3>
+            <button type="button" onclick="toggleNewTopicDrawer()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #64748b;">✕</button>
+        </div>
+        <form action="{{ url_for('campus_forum') }}" method="POST">
+            <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 14px; margin-bottom: 14px;">
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Relevant Course *</label>
+                    <select name="course_id" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px;">
+                        {% for c in courses %}
+                        <option value="{{ c.id }}">{{ c.code }} — {{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div>
+                    <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Question / Topic Title *</label>
+                    <input type="text" name="title" placeholder="e.g. How to prevent memory leaks in C dynamic allocation?" required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;">
+                </div>
+            </div>
+            <div style="margin-bottom: 16px;">
+                <label style="display: block; font-size: 12px; font-weight: 700; color: #334155; margin-bottom: 4px;">Detailed Explanation / Code Snippet *</label>
+                <textarea name="message" rows="4" placeholder="Describe what you tried, what error occurred, or what concept you want to clarify..." required style="width: 100%; padding: 9px 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+                <button type="button" onclick="toggleNewTopicDrawer()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-primary" style="background: #0d9488; font-weight: 700;">Post Discussion</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Topics List -->
+    {% if topics %}
+    <div style="display: flex; flex-direction: column; gap: 16px;">
+        {% for t in topics %}
+        <div class="dashboard-card" style="margin-bottom: 0;">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; margin-bottom: 10px;">
+                <div>
+                    <span class="portal-badge" style="background: #ccfbf1; color: #0f766e; font-size: 11px; margin-bottom: 6px; display: inline-block;">
+                        {{ t.course_code or 'CSE' }} • {{ t.course_name or 'General' }}
+                    </span>
+                    <h3 style="margin: 0; font-size: 17px;">
+                        <a href="{{ url_for('campus_forum_topic', topic_id=t.id) }}" style="color: #0f172a; text-decoration: none;">
+                            {{ t.title }}
+                        </a>
+                    </h3>
+                </div>
+                <div style="text-align: right;">
+                    <span class="portal-badge" style="background: #f1f5f9; color: #475569; font-weight: 700;">
+                        💬 {{ t.reply_count }} {{ 'reply' if t.reply_count == 1 else 'replies' }}
+                    </span>
+                </div>
+            </div>
+
+            <p style="color: #475569; font-size: 13px; line-height: 1.5; margin: 0 0 12px;">
+                {{ t.message[:180] }}{% if t.message|length > 180 %}...{% endif %}
+            </p>
+
+            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 10px; font-size: 12px; color: #64748b;">
+                <div>
+                    Posted by: <strong>{{ t.author_name }}</strong> 
+                    <span class="user-pill {{ 'faculty-pill' if t.author_role in ['faculty', 'admin'] else 'student-pill' }}" style="font-size: 10px; padding: 2px 8px;">
+                        {{ t.author_role|capitalize }}
+                    </span>
+                    • {{ (t.created_at|string)[:10] if t.created_at else '' }}
+                </div>
+                <div>
+                    <a href="{{ url_for('campus_forum_topic', topic_id=t.id) }}" class="btn btn-sm btn-primary" style="background: #0d9488; font-weight: 700;">
+                        Join Discussion →
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+        <p>No discussion threads have been opened yet. Be the first to start a conversation!</p>
+    </div>
+    {% endif %}
+
+</div>
+
+<script>
+function toggleNewTopicDrawer() {
+    var d = document.getElementById('newTopicDrawer');
+    d.style.display = (d.style.display === 'none' || d.style.display === '') ? 'block' : 'none';
+}
+</script>
+{% endblock %}

@@ -1,0 +1,74 @@
+{% extends "base.html" %}
+
+{% block title %}{{ topic.title }} — SyllabusX Forum{% endblock %}
+
+{% block content %}
+<div class="page-container">
+
+    <div class="dashboard-header">
+        <div>
+            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 6px;">
+                <span class="portal-badge" style="background: #0d9488; color: white;">COURSE Q&amp;A</span>
+                <span class="status-badge status-active">{{ topic.course_code or 'CSE' }}</span>
+            </div>
+            <h1>{{ topic.title }}</h1>
+            <p>Posted by <strong>{{ topic.author_name }}</strong> ({{ topic.author_role|capitalize }}) on {{ topic.created_at }}</p>
+        </div>
+        <div class="header-action-buttons">
+            <a href="{{ url_for('campus_forum') }}" class="btn btn-secondary">
+                ← Back to Forum
+            </a>
+        </div>
+    </div>
+
+    <!-- Original Topic Post -->
+    <div class="dashboard-card" style="border-left: 4px solid #0d9488; margin-bottom: 24px;">
+        <div style="font-size: 15px; color: #1e293b; line-height: 1.6; white-space: pre-wrap; margin-bottom: 12px;">{{ topic.message }}</div>
+        <div style="font-size: 12px; color: #64748b; border-top: 1px solid #f1f5f9; padding-top: 10px;">
+            Discussion thread related to: <strong>{{ topic.course_name }}</strong>
+        </div>
+    </div>
+
+    <!-- Discussion Replies -->
+    <h3 style="margin-bottom: 16px; color: #0f172a;">💬 Discussion &amp; Answers ({{ replies|length }})</h3>
+
+    {% if replies %}
+    <div style="display: flex; flex-direction: column; gap: 14px; margin-bottom: 24px;">
+        {% for r in replies %}
+        <div style="background: white; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 16px 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <strong>{{ r.author_name }}</strong>
+                    <span class="user-pill {{ 'faculty-pill' if r.author_role in ['faculty', 'admin'] else 'student-pill' }}" style="font-size: 10px; padding: 2px 8px;">
+                        {{ r.author_role|capitalize }}
+                    </span>
+                </div>
+                <small style="color: #64748b;">{{ r.created_at }}</small>
+            </div>
+            <div style="color: #334155; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">{{ r.reply_text }}</div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <div style="background: #f8fafc; border: 1.5px dashed #cbd5e1; border-radius: 8px; padding: 20px; text-align: center; color: #64748b; margin-bottom: 24px;">
+        No responses yet. Share your answer or thoughts below!
+    </div>
+    {% endif %}
+
+    <!-- Post a Reply Form -->
+    <div class="dashboard-card">
+        <h3 style="margin-top: 0; margin-bottom: 12px; font-size: 16px; color: #0f172a;">✍️ Post Your Answer / Solution</h3>
+        <form action="{{ url_for('campus_forum_topic', topic_id=topic.id) }}" method="POST">
+            <div style="margin-bottom: 12px;">
+                <textarea name="reply_text" rows="4" placeholder="Write your technical explanation, code snippet, or suggestion..." required style="width: 100%; padding: 12px; border: 1.5px solid #cbd5e1; border-radius: 6px; font-size: 13px; box-sizing: border-box;"></textarea>
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+                <button type="submit" class="btn btn-primary" style="background: #0d9488; font-weight: 700;">
+                    Post Reply
+                </button>
+            </div>
+        </form>
+    </div>
+
+</div>
+{% endblock %}

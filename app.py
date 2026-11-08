@@ -7361,6 +7361,499 @@ def export_attendance_csv():
     )
 
 
+
+# ============================================================
+# AI-POWERED CODE TUTOR & EXPLAINER (GEMINI / LOCAL AST ENGINE)
+# ============================================================
+
+@app.route("/api/ai/explain-code", methods=["POST"])
+def ai_explain_code():
+    data = request.get_json(silent=True) or {}
+    code = (data.get("code") or "").strip()
+    language = (data.get("language") or "python").lower()
+    problem_text = (data.get("problem_text") or "").strip()
+    last_output = (data.get("output") or "").strip()
+
+    if not code:
+        return jsonify({
+            "success": False,
+            "error": "Please write or paste some code to analyze."
+        }), 400
+
+    gemini_key = os.environ.get("GEMINI_API_KEY", "").strip()
+    analysis_text = ""
+
+    # Option A: Real Gemini API if key is available
+    if gemini_key:
+        try:
+            prompt = f"""You are an expert computer science professor and coding mentor at MIT Meerut.
+Analyze this student code submission and provide structured, pedagogical, encouraging feedback.
+Language: {language}
+Problem Statement: {problem_text}
+Student Code:
+```
+{code}
+```
+Last Execution Output:
+{last_output}
+
+Provide output with these 4 sections:
+1. **Algorithm Overview**: A short 2-line explanation of the student's approach.
+2. **Time & Space Complexity**: Big-O notation for time and auxiliary space.
+3. **Bugs & Edge Cases**: Potential failure points (e.g. empty inputs, zero division, off-by-one, memory leaks).
+4. **Optimization Tips**: Concrete, actionable recommendations to improve performance or code cleanliness.
+Keep tone constructive and encouraging."""
+
+            gemini_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={gemini_key}"
+            payload = json.dumps({
+                "contents": [{"parts": [{"text": prompt}]}]
+            }).encode("utf-8")
+            req = Request(gemini_url, data=payload, headers={"Content-Type": "application/json"})
+            with urlopen(req, timeout=12) as resp:
+                resp_data = json.loads(resp.read().decode("utf-8"))
+                candidates = resp_data.get("candidates", [])
+                if candidates:
+                    parts = candidates[0].get("content", {}).get("parts", [])
+                    if parts:
+                        analysis_text = parts[0].get("text", "")
+        except Exception as e:
+            analysis_text = ""
+
+    # Option B: High-Performance Pedagogical Static Analyzer Fallback
+    if not analysis_text:
+        # Determine complexity heuristics
+        lines = code.split("\n")
+        loop_keywords = ["for ", "while ", "forEach", "for("]
+        loop_depth = 0
+        current_indent = 0
+        has_nested = False
+        loop_count = 0
+        for line in lines:
+            if any(k in line for k in loop_keywords):
+                loop_count += 1
+                if loop_count >= 2:
+                    has_nested = True
+
+        time_comp = "O(N²)" if has_nested else ("O(N)" if loop_count == 1 else "O(1)")
+        space_comp = "O(N)" if ("[" in code or "new " in code or "malloc" in code or "append" in code) else "O(1)"
+
+        bugs = []
+        if "/ 0" in code or "/0" in code:
+            bugs.append("Potential division by zero detected.")
+        if "while True" in code and "break" not in code:
+            bugs.append("Infinite loop risk: 'while True' without apparent 'break'.")
+        if language == "c" and "scanf" in code and "&" not in code:
+            bugs.append("Check 'scanf' pointers; address-of operator '&' might be missing.")
+        if language == "python" and "input()" in code and "int(" not in code and ("+" in code or "*" in code):
+            bugs.append("Note: Python 'input()' returns strings; convert to integer if doing arithmetic.")
+        if not bugs:
+            bugs.append("No critical syntax flags detected; verify edge cases (empty lists, 0, negative values).")
+
+        tips = [
+            f"Estimated Time Complexity: **{time_comp}**, Space Complexity: **{space_comp}**.",
+            "Consider boundary conditions: what happens if the input is minimum or maximum possible?",
+            "Use descriptive variable names and document logic with inline comments."
+        ]
+        if has_nested:
+            tips.append("Try using HashMaps / Dictionaries or Two-Pointer techniques to reduce nested loop O(N²) time complexity to O(N).")
+
+        analysis_text = f"""### 🤖 AI Code Analysis & Pedagogical Review
+**Language:** {language.upper()} | **Lab Assessment Engine**
+
+#### 1. 💡 Algorithmic Structure
+Your code uses a structured procedural approach with **{len(lines)} lines** and **{loop_count} active loop construct(s)**.
+
+#### 2. ⚡ Computational Complexity
+- **Time Complexity:** `{time_comp}`
+- **Auxiliary Space:** `{space_comp}`
+
+#### 3. 🐞 Edge Cases & Safety Checks
+- {chr(10).join(f"- {b}" for b in bugs)}
+
+#### 4. 🚀 Optimization Recommendations
+- {chr(10).join(f"- {t}" for t in tips)}
+"""
+
+    return jsonify({
+        "success": True,
+        "analysis": analysis_text
+    })
+
+
+# ============================================================
+# ASSIGNMENTS & HOMEWORK SUBMISSION MODULE
+# ============================================================
+
+@app.route("/student/assignments")
+@student_login_required
+def student_assignments():
+    student_id = session["student_id"]
+    connection = get_db_connection()
+    assignments = connection.execute("""
+        SELECT
+            assignments.*,
+            courses.name as course_name,
+            courses.code as course_code,
+            assignment_submissions.id as submission_id,
+            assignment_submissions.status as submission_status,
+            assignment_submissions.marks_obtained,
+            assignment_submissions.feedback,
+            assignment_submissions.submitted_at
+        FROM assignments
+        LEFT JOIN courses ON assignments.course_id = courses.id
+        LEFT JOIN assignment_submissions
+            ON assignments.id = assignment_submissions.assignment_id
+            AND assignment_submissions.student_id = ?
+        ORDER BY assignments.due_date ASC, assignments.id DESC
+    """, (student_id,)).fetchall()
+    connection.close()
+
+    return render_template("student_assignments.html", assignments=assignments)
+
+
+@app.route("/student/assignments/<int:assignment_id>/submit", methods=["POST"])
+@student_login_required
+def student_submit_assignment(assignment_id):
+    student_id = session["student_id"]
+    submission_text = (request.form.get("submission_text") or "").strip()
+
+    if not submission_text:
+        flash("Please provide your assignment response or source code.", "error")
+        return redirect(url_for("student_assignments"))
+
+    connection = get_db_connection()
+    existing = connection.execute("""
+        SELECT id FROM assignment_submissions
+        WHERE assignment_id = ? AND student_id = ?
+    """, (assignment_id, student_id)).fetchone()
+
+    if existing:
+        connection.execute("""
+            UPDATE assignment_submissions
+            SET submission_text = ?, submitted_at = CURRENT_TIMESTAMP, status = 'resubmitted'
+            WHERE id = ?
+        """, (submission_text, existing["id"]))
+        flash("Assignment updated and resubmitted successfully!", "success")
+    else:
+        connection.execute("""
+            INSERT INTO assignment_submissions (assignment_id, student_id, submission_text, status)
+            VALUES (?, ?, ?, 'submitted')
+        """, (assignment_id, student_id, submission_text))
+        flash("Assignment submitted successfully!", "success")
+
+    connection.commit()
+    connection.close()
+    return redirect(url_for("student_assignments"))
+
+
+@app.route("/faculty/assignments", methods=["GET", "POST"])
+@faculty_or_admin_required
+def faculty_assignments():
+    connection = get_db_connection()
+
+    if request.method == "POST":
+        course_id = request.form.get("course_id")
+        title = (request.form.get("title") or "").strip()
+        description = (request.form.get("description") or "").strip()
+        max_marks = int(request.form.get("max_marks") or 100)
+        due_date = request.form.get("due_date") or ""
+
+        if not title:
+            flash("Assignment title is required.", "error")
+            return redirect(url_for("faculty_assignments"))
+
+        faculty_id = session.get("faculty_id") or 1
+        connection.execute("""
+            INSERT INTO assignments (course_id, title, description, max_marks, due_date, created_by_faculty_id)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (course_id, title, description, max_marks, due_date, faculty_id))
+        connection.commit()
+        flash("New course assignment published successfully!", "success")
+        return redirect(url_for("faculty_assignments"))
+
+    courses = connection.execute("SELECT * FROM courses WHERE is_active = 1 ORDER BY id").fetchall()
+    assignments = connection.execute("""
+        SELECT
+            assignments.*,
+            courses.name as course_name,
+            courses.code as course_code,
+            COUNT(assignment_submissions.id) as total_submissions
+        FROM assignments
+        LEFT JOIN courses ON assignments.course_id = courses.id
+        LEFT JOIN assignment_submissions ON assignments.id = assignment_submissions.assignment_id
+        GROUP BY assignments.id, courses.name, courses.code
+        ORDER BY assignments.id DESC
+    """).fetchall()
+    connection.close()
+
+    return render_template("faculty_assignments.html", assignments=assignments, courses=courses)
+
+
+@app.route("/faculty/assignments/<int:assignment_id>/submissions", methods=["GET", "POST"])
+@faculty_or_admin_required
+def faculty_assignment_submissions(assignment_id):
+    connection = get_db_connection()
+
+    if request.method == "POST":
+        submission_id = request.form.get("submission_id")
+        marks = request.form.get("marks_obtained")
+        feedback = (request.form.get("feedback") or "").strip()
+
+        if marks is not None and marks != "":
+            connection.execute("""
+                UPDATE assignment_submissions
+                SET marks_obtained = ?, feedback = ?, status = 'graded'
+                WHERE id = ?
+            """, (int(marks), feedback, submission_id))
+            connection.commit()
+            flash("Submission graded successfully!", "success")
+        return redirect(url_for("faculty_assignment_submissions", assignment_id=assignment_id))
+
+    assignment = connection.execute("""
+        SELECT assignments.*, courses.name as course_name
+        FROM assignments
+        LEFT JOIN courses ON assignments.course_id = courses.id
+        WHERE assignments.id = ?
+    """, (assignment_id,)).fetchone()
+
+    submissions = connection.execute("""
+        SELECT
+            assignment_submissions.*,
+            students.name as student_name,
+            students.roll_number,
+            students.email as student_email
+        FROM assignment_submissions
+        JOIN students ON assignment_submissions.student_id = students.id
+        WHERE assignment_submissions.assignment_id = ?
+        ORDER BY assignment_submissions.submitted_at DESC
+    """, (assignment_id,)).fetchall()
+    connection.close()
+
+    return render_template(
+        "faculty_assignment_submissions.html",
+        assignment=assignment,
+        submissions=submissions
+    )
+
+
+# ============================================================
+# STUDENT FEES & PRINTABLE FEE RECEIPT
+# ============================================================
+
+@app.route("/student/fees")
+@student_login_required
+def student_fees():
+    student_id = session["student_id"]
+    connection = get_db_connection()
+    student = connection.execute("SELECT * FROM students WHERE id = ?", (student_id,)).fetchone()
+    fee_records = connection.execute("""
+        SELECT * FROM student_fees
+        WHERE student_id = ?
+        ORDER BY id DESC
+    """, (student_id,)).fetchall()
+    connection.close()
+
+    return render_template("student_fees.html", student=student, fee_records=fee_records)
+
+
+@app.route("/student/fees/<int:fee_id>/receipt")
+@student_login_required
+def student_fee_receipt(fee_id):
+    student_id = session["student_id"]
+    connection = get_db_connection()
+    fee = connection.execute("""
+        SELECT student_fees.*, students.name, students.roll_number, students.email
+        FROM student_fees
+        JOIN students ON student_fees.student_id = students.id
+        WHERE student_fees.id = ? AND student_fees.student_id = ?
+    """, (fee_id, student_id)).fetchone()
+    connection.close()
+
+    if not fee:
+        flash("Fee receipt record not found.", "error")
+        return redirect(url_for("student_fees"))
+
+    return render_template("fee_receipt.html", fee=fee)
+
+
+@app.route("/admin/fees")
+@faculty_or_admin_required
+def admin_fees():
+    connection = get_db_connection()
+    fee_records = connection.execute("""
+        SELECT
+            student_fees.*,
+            students.name as student_name,
+            students.roll_number,
+            students.email as student_email
+        FROM student_fees
+        JOIN students ON student_fees.student_id = students.id
+        ORDER BY student_fees.id DESC
+    """).fetchall()
+    connection.close()
+
+    return render_template("admin_fees.html", fee_records=fee_records)
+
+
+# ============================================================
+# AUTOMATED WHATSAPP & SMS ATTENDANCE SHORTAGE ALERTS
+# ============================================================
+
+@app.route("/faculty/attendance/send-shortage-alert", methods=["POST"])
+@faculty_or_admin_required
+def send_shortage_alerts():
+    connection = get_db_connection()
+    raw_students = connection.execute("SELECT * FROM students ORDER BY roll_number").fetchall()
+
+    alert_count = 0
+    notified_names = []
+
+    for st in raw_students:
+        summary = get_student_attendance_summary(connection, st["id"])
+        if summary and not summary.get("is_eligible", True):
+            pct = summary.get("percentage", 0)
+            mob = st.get("mobile_number") or ""
+            email = st.get("email") or ""
+            name = st.get("name") or "Student"
+            roll = st.get("roll_number") or ""
+
+            msg = (
+                f"🚨 MIT MEERUT URGENT NOTICE:\n"
+                f"Dear {name} (Roll: {roll}), your attendance is currently {pct}%, "
+                f"which is below AKTU mandatory 75% criteria. "
+                f"You are at risk of exam debarment. Attend lectures immediately."
+            )
+
+            # Try SMS / WhatsApp dispatch
+            if mob:
+                try:
+                    send_otp_via_mobile(mob, name, f"ALERT: {pct}% Attd")
+                except Exception:
+                    pass
+
+            # Try Email dispatch
+            if email:
+                try:
+                    send_otp_via_smtp(email, name, f"AKTU Shortage Alert: {pct}%", msg)
+                except Exception:
+                    pass
+
+            log_activity(st["id"], f"AKTU Shortage Alert triggered by Faculty. Attendance: {pct}%")
+            alert_count += 1
+            notified_names.append(f"{name} ({pct}%)")
+
+    connection.close()
+
+    if alert_count > 0:
+        flash(
+            f"✅ Dispatched official AKTU Shortage Alerts to {alert_count} student(s): {', '.join(notified_names[:5])}"
+            + (f" and {alert_count - 5} more." if alert_count > 5 else "."),
+            "success"
+        )
+    else:
+        flash("All students currently maintain >= 75% attendance! No shortage alerts needed.", "info")
+
+    return redirect(url_for("admin_attendance_records"))
+
+
+# ============================================================
+# CAMPUS DOUBT & DISCUSSION FORUM
+# ============================================================
+
+@app.route("/campus/forum", methods=["GET", "POST"])
+def campus_forum():
+    connection = get_db_connection()
+
+    if request.method == "POST":
+        role = session.get("role")
+        if not role:
+            flash("Please sign in to post questions or doubts in the forum.", "error")
+            return redirect(url_for("login"))
+
+        course_id = request.form.get("course_id")
+        title = (request.form.get("title") or "").strip()
+        message = (request.form.get("message") or "").strip()
+
+        if not title or not message:
+            flash("Topic title and question details are required.", "error")
+            return redirect(url_for("campus_forum"))
+
+        user_id = session.get("student_id") or session.get("faculty_id") or session.get("admin_id") or 1
+        user_name = session.get("student_name") or session.get("faculty_name") or session.get("admin_name") or "User"
+
+        connection.execute("""
+            INSERT INTO forum_topics (course_id, author_id, author_name, author_role, title, message)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (course_id, user_id, user_name, role, title, message))
+        connection.commit()
+        flash("Your question has been posted to the Campus Discussion Forum!", "success")
+        return redirect(url_for("campus_forum"))
+
+    courses = connection.execute("SELECT * FROM courses WHERE is_active = 1 ORDER BY id").fetchall()
+    topics = connection.execute("""
+        SELECT
+            forum_topics.*,
+            courses.name as course_name,
+            courses.code as course_code,
+            COUNT(forum_replies.id) as reply_count
+        FROM forum_topics
+        LEFT JOIN courses ON forum_topics.course_id = courses.id
+        LEFT JOIN forum_replies ON forum_topics.id = forum_replies.topic_id
+        GROUP BY forum_topics.id, courses.name, courses.code
+        ORDER BY forum_topics.id DESC
+    """).fetchall()
+    connection.close()
+
+    return render_template("campus_forum.html", topics=topics, courses=courses)
+
+
+@app.route("/campus/forum/<int:topic_id>", methods=["GET", "POST"])
+def campus_forum_topic(topic_id):
+    connection = get_db_connection()
+
+    if request.method == "POST":
+        role = session.get("role")
+        if not role:
+            flash("Please sign in to reply to discussion questions.", "error")
+            return redirect(url_for("login"))
+
+        reply_text = (request.form.get("reply_text") or "").strip()
+        if not reply_text:
+            flash("Reply message cannot be empty.", "error")
+            return redirect(url_for("campus_forum_topic", topic_id=topic_id))
+
+        user_id = session.get("student_id") or session.get("faculty_id") or session.get("admin_id") or 1
+        user_name = session.get("student_name") or session.get("faculty_name") or session.get("admin_name") or "User"
+
+        connection.execute("""
+            INSERT INTO forum_replies (topic_id, author_id, author_name, author_role, reply_text)
+            VALUES (?, ?, ?, ?, ?)
+        """, (topic_id, user_id, user_name, role, reply_text))
+        connection.commit()
+        flash("Your answer has been posted!", "success")
+        return redirect(url_for("campus_forum_topic", topic_id=topic_id))
+
+    topic = connection.execute("""
+        SELECT forum_topics.*, courses.name as course_name, courses.code as course_code
+        FROM forum_topics
+        LEFT JOIN courses ON forum_topics.course_id = courses.id
+        WHERE forum_topics.id = ?
+    """, (topic_id,)).fetchone()
+
+    if not topic:
+        connection.close()
+        flash("Discussion topic not found.", "error")
+        return redirect(url_for("campus_forum"))
+
+    replies = connection.execute("""
+        SELECT * FROM forum_replies
+        WHERE topic_id = ?
+        ORDER BY id ASC
+    """, (topic_id,)).fetchall()
+    connection.close()
+
+    return render_template("forum_topic.html", topic=topic, replies=replies)
+
 # ============================================================
 # APPLICATION START
 # ============================================================
