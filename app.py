@@ -282,16 +282,26 @@ app.config["MAX_CONTENT_LENGTH"] = 16 * 1024 * 1024  # 16 MB max upload limit
 # ============================================================
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DATABASE_DIR = os.path.join(BASE_DIR, "database")
-DATABASE_PATH = os.path.join(DATABASE_DIR, "assessment.db")
+# On Vercel (read-only FS), use /tmp for SQLite fallback
+_IS_VERCEL = bool(os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV"))
+if _IS_VERCEL:
+    DATABASE_DIR = "/tmp/database"
+    DATABASE_PATH = "/tmp/database/assessment.db"
+else:
+    DATABASE_DIR = os.path.join(BASE_DIR, "database")
+    DATABASE_PATH = os.path.join(DATABASE_DIR, "assessment.db")
 
 
 def get_db_connection():
     database_url = os.environ.get("DATABASE_URL", "")
     if database_url and _PSYCOPG2_AVAILABLE:
         # ----- PostgreSQL (Supabase / production) -----
-        pg_conn = psycopg2.connect(database_url)
-        return _PGConnectionWrapper(pg_conn)
+        try:
+            pg_conn = psycopg2.connect(database_url, connect_timeout=10)
+            return _PGConnectionWrapper(pg_conn)
+        except Exception as pg_err:
+            import logging
+            logging.warning(f"[DB] PostgreSQL connection failed, falling back to SQLite: {pg_err}")
     # ----- SQLite (local fallback) -----
     os.makedirs(DATABASE_DIR, exist_ok=True)
     connection = sqlite3.connect(
@@ -351,7 +361,9 @@ def parse_datetime(value):
 
 def column_exists(connection, table_name, column_name):
     # Check if we are on PostgreSQL (no PRAGMA support)
-    if os.environ.get("DATABASE_URL") and _PSYCOPG2_AVAILABLE:
+    # Use isinstance check on connection type, not env var, because
+    # PostgreSQL might have failed to connect and we fell back to SQLite
+    if isinstance(connection, _PGConnectionWrapper):
         rows = connection.execute(
             "SELECT column_name FROM information_schema.columns "
             "WHERE table_schema = 'public' AND table_name = %s AND column_name = %s",
